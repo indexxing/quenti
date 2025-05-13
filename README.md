@@ -19,7 +19,7 @@ Get up and running by following these steps.
 
 ### Prerequisites
 
-- Node.js 18.x
+- Node.js 22.x
 - MySQL
 - Bun
 - Docker and docker-compose _(recommended)_
