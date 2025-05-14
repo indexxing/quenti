@@ -11,6 +11,7 @@ import {
   Button,
   ButtonGroup,
   Flex,
+  HStack,
   Input,
   Stack,
   useColorModeValue,
@@ -21,6 +22,7 @@ import { useAuthedSet } from "../../../../hooks/use-set";
 import { useContainerContext } from "../../../../stores/use-container-store";
 import { useLearnContext } from "../../../../stores/use-learn-store";
 import { word } from "../../../../utils/terms";
+import { HintButton } from "../../hint-button";
 
 export interface InputStateProps {
   active: Question;
@@ -99,7 +101,19 @@ export const InputState: React.FC<InputStateProps> = ({ active, onSubmit }) => {
   return (
     <Stack spacing={6}>
       <Stack spacing="2">
-        <GenericLabel>Your answer</GenericLabel>
+        <HStack
+          justifyContent="space-between"
+          alignItems="center"
+          flexWrap="wrap"
+        >
+          <GenericLabel>Your answer</GenericLabel>
+          <Box>
+            <HintButton
+              type="write"
+              answer={word(active.answerMode, active.term, "answer")}
+            />
+          </Box>
+        </HStack>
         <Stack spacing="3">
           {!!specialCharacters.length && (
             <Box>
