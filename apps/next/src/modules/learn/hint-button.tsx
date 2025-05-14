@@ -111,13 +111,13 @@ export const HintButton: React.FC<HintButtonProps> = ({
 
     switch (selectedHintType) {
       case "first":
-        return `The word start with: "${cleanAnswer[0] || "?"}"`;
+        return `The word start with ${cleanAnswer[0] || "?"}`;
       case "last":
-        return `The word ends with: "${
+        return `The word ends with ${
           cleanAnswer[cleanAnswer.length - 1] || "?"
-        }"`;
+        }`;
       case "length":
-        return `The word has: ${cleanAnswer.length} character${
+        return `The word has ${cleanAnswer.length} character${
           cleanAnswer.length !== 1 ? "s" : ""
         }`;
       default:
@@ -229,7 +229,11 @@ export const HintButton: React.FC<HintButtonProps> = ({
         _focus={{ outline: "none", boxShadow: "outline" }}
       >
         <PopoverArrow bg={bgColor} />
-        <PopoverCloseButton />
+        <PopoverCloseButton
+          top="8px"
+          right="8px"
+          transform={"translate(7px, -9px)"}
+        />
         <PopoverBody p={4}>
           <Box position="relative">
             {type === "write" && (
