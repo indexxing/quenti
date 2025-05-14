@@ -35,6 +35,7 @@ export interface LearnStoreProps {
   completed: boolean;
   hasMissedTerms?: boolean;
   prevTermWasIncorrect?: boolean;
+  hintsUsed: Map<string, boolean>; // Track which terms had hints used
 }
 
 interface LearnState extends LearnStoreProps {
@@ -55,6 +56,7 @@ interface LearnState extends LearnStoreProps {
   incorrectFromUnknown: (termId: string) => void;
   nextRound: (start?: boolean) => void;
   setFeedbackBank: (correct: string[], incorrect: string[]) => void;
+  setHintUsed: (termId: string, used: boolean) => void;
 }
 
 export type LearnStore = ReturnType<typeof createLearnStore>;
@@ -74,6 +76,7 @@ export const createLearnStore = (initProps?: Partial<LearnStoreProps>) => {
     specialCharacters: [],
     feedbackBank: { correct: CORRECT, incorrect: INCORRECT },
     completed: false,
+    hintsUsed: new Map<string, boolean>(),
   };
 
   return createStore<LearnState>()(
@@ -253,6 +256,8 @@ export const createLearnStore = (initProps?: Partial<LearnStoreProps>) => {
       },
       nextRound: (start = false) => {
         set((state) => {
+          // Reset hints used for the new round
+          const hintsUsed = new Map<string, boolean>();
           const currentRound = state.currentRound + (!start ? 1 : 0);
 
           const incorrectTerms = state.studiableTerms.filter(
@@ -337,12 +342,20 @@ export const createLearnStore = (initProps?: Partial<LearnStoreProps>) => {
             completed: !termsThisRound.length,
             hasMissedTerms,
             currentRound,
+            hintsUsed,
           };
         });
       },
       setFeedbackBank: (correct, incorrect) => {
         set({
           feedbackBank: { correct, incorrect },
+        });
+      },
+      setHintUsed: (termId, used) => {
+        set((state) => {
+          const newHintsUsed = new Map(state.hintsUsed);
+          newHintsUsed.set(termId, used);
+          return { hintsUsed: newHintsUsed };
         });
       },
     })),

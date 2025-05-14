@@ -26,6 +26,7 @@ import { SquareAssetPreview } from "../../../components/terms/square-asset-previ
 import { useAuthedSet } from "../../../hooks/use-set";
 import { useLearnContext } from "../../../stores/use-learn-store";
 import { word } from "../../../utils/terms";
+import { HintButton } from "../hint-button";
 
 interface ChoiceCardProps {
   active: Question;
@@ -153,24 +154,50 @@ export const ChoiceCard: React.FC<ChoiceCardProps> = ({ active }) => {
             active.answerMode == "Definition" ? "definition" : "term"
           }`;
 
+  const [displayedChoices, setDisplayedChoices] = React.useState(
+    active.choices,
+  );
+
+  const handleEliminateChoices = (remainingChoices: FacingTerm[]) => {
+    setDisplayedChoices(remainingChoices);
+  };
+
   return (
     <Stack spacing="3">
-      <GenericLabel
-        evaluation={
-          status && status !== "unknownPartial"
-            ? status == "correct"
-            : undefined
-        }
+      <Flex
+        justifyContent="space-between"
+        alignItems="center"
+        wrap="wrap"
+        gap={2}
       >
-        {text}
-      </GenericLabel>
+        <GenericLabel
+          evaluation={
+            status && status !== "unknownPartial"
+              ? status == "correct"
+              : undefined
+          }
+        >
+          {text}
+        </GenericLabel>
+        {!answered && (
+          <Box flexShrink={0}>
+            <HintButton
+              type="choice"
+              correctTermId={active.term.id}
+              choices={active.choices}
+              onEliminateChoices={handleEliminateChoices}
+              disabled={!!answered}
+            />
+          </Box>
+        )}
+      </Flex>
       <Grid gridTemplateColumns={{ base: "1fr", md: "1fr 1fr" }} gap="6">
         <ChoiceShortcutLayer
           choose={(i) => {
             if (active.choices.length > i) choose(active.choices[i]!);
           }}
         />
-        {active.choices.map((choice, i) => (
+        {displayedChoices.map((choice, i) => (
           <GridItem h="auto" key={i}>
             <Button
               w="full"
