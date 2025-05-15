@@ -32,6 +32,8 @@ export interface InputStateProps {
 export const InputState: React.FC<InputStateProps> = ({ active, onSubmit }) => {
   const { container, wordLanguage, definitionLanguage } = useAuthedSet();
   const mutlipleAnswerMode = useContainerContext((s) => s.multipleAnswerMode);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const requireRetyping = useContainerContext((s) => s.requireRetyping);
   const answerCorrectly = useLearnContext((s) => s.answerCorrectly);
   const answerIncorrectly = useLearnContext((s) => s.answerIncorrectly);
   const answerUnknownPartial = useLearnContext((s) => s.answerUnknownPartial);

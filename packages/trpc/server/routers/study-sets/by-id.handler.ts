@@ -205,6 +205,7 @@ export const byIdHandler = async ({ ctx, input }: ByIdOptions) => {
         incorrectCount: x.incorrectCount,
         studiableRank: x.studiableRank,
       })),
+      requireRetyping: container.requireRetyping || false,
     },
   };
 };
