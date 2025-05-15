@@ -47,11 +47,9 @@ export const WriteCard: React.FC<WriteCardProps> = ({ active }) => {
       // If the answer is incorrect and requireRetyping is enabled, set up retyping state
       if (status === "incorrect" && requireRetyping && !isRetyping) {
         const correctAnswer = word(active.answerMode, active.term, "answer");
-        // Show retyping after a delay to allow the user to see the incorrect feedback first
-        setTimeout(() => {
-          startRetyping(correctAnswer);
-          setShowRetyping(true);
-        }, 1500);
+        // Immediately switch to retyping mode without showing the incorrect state
+        startRetyping(correctAnswer);
+        setShowRetyping(true);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
