@@ -184,8 +184,22 @@ export const HintButton: React.FC<HintButtonProps> = ({
       }
     }
 
-    onOpen();
+    // If the popover is already open, close it first to ensure it reopens
+    if (isOpen) {
+      onClose();
+      // Use setTimeout to ensure the state updates before reopening
+      setTimeout(() => {
+        onOpen();
+        updateHintContent();
+      }, 50);
+    } else {
+      onOpen();
+      updateHintContent();
+    }
+  };
 
+  // Extract hint generation logic to a separate function for reusability
+  const updateHintContent = () => {
     if (type === "choice") {
       const choiceHint = getChoiceHint();
       if (choiceHint) setHint(choiceHint);
@@ -223,10 +237,10 @@ export const HintButton: React.FC<HintButtonProps> = ({
       <PopoverContent
         width="auto"
         bg={bgColor}
-        borderColor={borderColor}
+        //borderColor={borderColor}
         borderRadius="lg"
         boxShadow={hintBoxShadow}
-        _focus={{ outline: "none", boxShadow: "outline" }}
+        _focus={{ outline: "none" }}
       >
         <PopoverArrow bg={bgColor} />
         <PopoverCloseButton
