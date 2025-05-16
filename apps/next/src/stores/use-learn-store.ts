@@ -35,6 +35,8 @@ export interface LearnStoreProps {
   completed: boolean;
   hasMissedTerms?: boolean;
   prevTermWasIncorrect?: boolean;
+  isRetyping?: boolean; // Track if user is retyping correct answer
+  correctAnswerToRetype?: string; // The correct answer that needs to be retyped
   hintsUsed: Map<string, boolean>; // Track which terms had hints used
 }
 
@@ -57,6 +59,8 @@ interface LearnState extends LearnStoreProps {
   nextRound: (start?: boolean) => void;
   setFeedbackBank: (correct: string[], incorrect: string[]) => void;
   setHintUsed: (termId: string, used: boolean) => void;
+  startRetyping: (correctAnswer: string) => void;
+  completeRetyping: () => void;
 }
 
 export type LearnStore = ReturnType<typeof createLearnStore>;
@@ -77,6 +81,8 @@ export const createLearnStore = (initProps?: Partial<LearnStoreProps>) => {
     feedbackBank: { correct: CORRECT, incorrect: INCORRECT },
     completed: false,
     hintsUsed: new Map<string, boolean>(),
+    isRetyping: false,
+    correctAnswerToRetype: undefined,
   };
 
   return createStore<LearnState>()(
@@ -155,6 +161,14 @@ export const createLearnStore = (initProps?: Partial<LearnStoreProps>) => {
           active.term.correctness = -1;
           active.term.incorrectCount++;
 
+          // Reset retyping state if active
+          if (state.isRetyping) {
+            set({
+              isRetyping: false,
+              correctAnswerToRetype: undefined,
+            });
+          }
+
           state.endQuestionCallback(false);
           return {};
         });
@@ -166,6 +180,14 @@ export const createLearnStore = (initProps?: Partial<LearnStoreProps>) => {
         set((state) => {
           const active = state.roundTimeline[state.roundCounter]!;
           active.term.correctness = 2;
+
+          // Reset retyping state if active
+          if (state.isRetyping) {
+            set({
+              isRetyping: false,
+              correctAnswerToRetype: undefined,
+            });
+          }
 
           const roundTimeline = state.roundTimeline;
           if (state.roundProgress != state.termsThisRound - 1) {
@@ -356,6 +378,18 @@ export const createLearnStore = (initProps?: Partial<LearnStoreProps>) => {
           const newHintsUsed = new Map(state.hintsUsed);
           newHintsUsed.set(termId, used);
           return { hintsUsed: newHintsUsed };
+        });
+      },
+      startRetyping: (correctAnswer) => {
+        set({
+          isRetyping: true,
+          correctAnswerToRetype: correctAnswer,
+        });
+      },
+      completeRetyping: () => {
+        set({
+          isRetyping: false,
+          correctAnswerToRetype: undefined,
         });
       },
     })),

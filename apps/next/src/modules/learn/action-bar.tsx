@@ -16,6 +16,8 @@ export const ActionBar = () => {
   const roundCounter = useLearnContext((s) => s.roundCounter);
   const acknowledgeIncorrect = useLearnContext((s) => s.acknowledgeIncorrect);
   const nextRound = useLearnContext((s) => s.nextRound);
+  const isRetyping = useLearnContext((s) => s.isRetyping);
+  const correctAnswerToRetype = useLearnContext((s) => s.correctAnswerToRetype);
 
   const put = api.studiableTerms.put.useMutation();
 
@@ -36,7 +38,11 @@ export const ActionBar = () => {
     }
   };
 
-  const visible = status == "incorrect" || !!roundSummary;
+  // Make sure action bar is hidden during retyping
+  const visible =
+    (status == "incorrect" || !!roundSummary) &&
+    !isRetyping &&
+    !correctAnswerToRetype;
 
   const handleAction = () => {
     status == "incorrect" ? handleAcknowledgeIncorrect() : nextRound();

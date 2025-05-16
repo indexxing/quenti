@@ -75,6 +75,7 @@ export const HintButton: React.FC<HintButtonProps> = ({
   const [hint, setHint] = React.useState<string>("");
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [hintType, setHintType] = React.useState<HintType>("first");
+  const popoverRef = React.useRef<HTMLDivElement>(null);
 
   const timeline = useLearnContext((s) => s.roundTimeline);
   const roundCounter = useLearnContext((s) => s.roundCounter);
@@ -83,6 +84,24 @@ export const HintButton: React.FC<HintButtonProps> = ({
 
   const active = timeline[roundCounter];
   const termId = active?.term?.id;
+
+  // Handle clicks outside the popover
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        isOpen &&
+        popoverRef.current &&
+        !popoverRef.current.contains(event.target as Node)
+      ) {
+        onClose();
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen, onClose]);
 
   // Check if hint was already used for this term
   React.useEffect(() => {
@@ -213,6 +232,8 @@ export const HintButton: React.FC<HintButtonProps> = ({
     <Popover
       placement={type === "write" ? "top-end" : "bottom"}
       closeOnBlur={true}
+      closeOnEsc={true}
+      returnFocusOnClose={false}
       isOpen={isOpen && !!hint}
       onClose={onClose}
     >
@@ -241,6 +262,8 @@ export const HintButton: React.FC<HintButtonProps> = ({
         borderRadius="lg"
         boxShadow={hintBoxShadow}
         _focus={{ outline: "none" }}
+        tabIndex={-1}
+        ref={popoverRef}
       >
         <PopoverArrow bg={bgColor} />
         <PopoverCloseButton
