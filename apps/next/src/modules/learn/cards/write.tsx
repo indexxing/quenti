@@ -51,12 +51,19 @@ export const WriteCard: React.FC<WriteCardProps> = ({ active }) => {
         startRetyping(correctAnswer);
         setShowRetyping(true);
       }
+      // If requireRetyping is disabled, we'll just show the incorrect state
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, active.term.id, requireRetyping]);
 
   if (isRetyping && showRetyping) {
-    return <RetypeAnswerState onComplete={() => setShowRetyping(false)} />;
+    return (
+      <RetypeAnswerState
+        active={active}
+        guess={guess}
+        onComplete={() => setShowRetyping(false)}
+      />
+    );
   }
 
   if (status === "correct") return <CorrectState guess={guess || ""} />;

@@ -1,8 +1,12 @@
 // eslint-disable-file @typescript-eslint/no-floating-promises
 import { motion, useAnimationControls } from "framer-motion";
+import { useSession } from "next-auth/react";
+import { log } from "next-axiom";
 import React from "react";
 
 import { GenericLabel } from "@quenti/components";
+import type { Question } from "@quenti/interfaces";
+import { api } from "@quenti/trpc";
 
 import {
   Box,
@@ -20,22 +24,33 @@ import { IconProgressCheck } from "@tabler/icons-react";
 
 import { ScriptFormatter } from "../../../../components/script-formatter";
 import { CharacterButtonWrapper } from "../../../../components/special-characters";
+import { useAuthedSet } from "../../../../hooks/use-set";
 import { useLearnContext } from "../../../../stores/use-learn-store";
-//import { HintButton } from "../../hint-button";
+import { word } from "../../../../utils/terms";
 import { AnswerCard } from "./answer-card";
 
 export interface RetypeAnswerStateProps {
   onComplete: () => void;
+  active: Question;
+  guess?: string;
 }
 
 export const RetypeAnswerState: React.FC<RetypeAnswerStateProps> = ({
   onComplete,
+  active,
+  guess,
 }) => {
+  const { container } = useAuthedSet();
   const correctAnswerToRetype = useLearnContext((s) => s.correctAnswerToRetype);
   const specialCharacters = useLearnContext((s) => s.specialCharacters);
   const completeRetyping = useLearnContext((s) => s.completeRetyping);
   const overrideCorrect = useLearnContext((s) => s.overrideCorrect);
-  const nextRound = useLearnContext((s) => s.nextRound);
+  const acknowledgeIncorrect = useLearnContext((s) => s.acknowledgeIncorrect);
+  const roundTimeline = useLearnContext((s) => s.roundTimeline);
+  const roundCounter = useLearnContext((s) => s.roundCounter);
+  const session = useSession();
+
+  const put = api.studiableTerms.put.useMutation();
 
   const inputBg = useColorModeValue("gray.100", "gray.800");
   const placeholderColor = useColorModeValue("gray.600", "gray.200");
@@ -51,26 +66,22 @@ export const RetypeAnswerState: React.FC<RetypeAnswerStateProps> = ({
   const handleSubmit = () => {
     if (!answer.trim().length) return;
 
+    // If user typed the correct answer
     if (answer.trim() === correctAnswerToRetype?.trim()) {
       setIsCorrect(true);
 
       // Immediately complete retyping and move to next question
       completeRetyping();
       onComplete();
-      // Advance to the next question
-      nextRound();
-
-      // Use animation controls to animate out the input section
-      void controls.start({ opacity: 0, height: 0 }).then(() => {
-        setShowInput(false);
-      });
+      // Advance to the next round
+      handleAcknowledgeIncorrect();
     } else {
       setIsCorrect(false);
       setAnswer("");
       // Shake the input to indicate incorrect answer
       void controls.start({
         x: [0, -10, 10, -10, 10, 0],
-        transition: { duration: 0.2 }, // Reduced from 0.4s to 0.2s for snappier experience
+        transition: { duration: 0.2 },
       });
       // Focus the input after clearing
       setTimeout(() => {
@@ -81,9 +92,23 @@ export const RetypeAnswerState: React.FC<RetypeAnswerStateProps> = ({
 
   const handleOverrideCorrect = () => {
     overrideCorrect();
-    completeRetyping();
-    onComplete();
-    nextRound();
+
+    log.info("learn.write.overrideCorrect", {
+      userId: session.data?.user?.id,
+      containerId: container.id,
+      termId: active.term.id,
+      guess,
+      answer: word(active.answerMode, active.term, "answer"),
+    });
+
+    put.mutate({
+      id: active.term.id,
+      containerId: container.id,
+      mode: "Learn",
+      correctness: 2,
+      appearedInRound: active.term.appearedInRound || 0,
+      incorrectCount: active.term.incorrectCount,
+    });
   };
 
   const handleClick = (c: string) => {
@@ -99,6 +124,26 @@ export const RetypeAnswerState: React.FC<RetypeAnswerStateProps> = ({
         cursorPosition + 1,
       );
     });
+  };
+
+  // This function is similar to the one in action-bar.tsx
+  // It handles the incorrect answer by updating the state and making API calls
+  const handleAcknowledgeIncorrect = () => {
+    acknowledgeIncorrect();
+
+    // Update the term status in the database
+    const active = roundTimeline[roundCounter]!;
+    if (active.type == "write") {
+      void (async () =>
+        await put.mutateAsync({
+          id: active.term.id,
+          containerId: container.id,
+          mode: "Learn",
+          correctness: -1,
+          appearedInRound: active.term.appearedInRound || 0,
+          incorrectCount: active.term.incorrectCount + 1,
+        }))();
+    }
   };
 
   return (
