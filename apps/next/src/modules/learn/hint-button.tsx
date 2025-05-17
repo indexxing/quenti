@@ -79,7 +79,6 @@ export const HintButton: React.FC<HintButtonProps> = ({
 
   const timeline = useLearnContext((s) => s.roundTimeline);
   const roundCounter = useLearnContext((s) => s.roundCounter);
-  //const hintsUsed = useLearnContext((s) => s.hintsUsed);
   const setHintUsed = useLearnContext((s) => s.setHintUsed);
 
   const active = timeline[roundCounter];
