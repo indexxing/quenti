@@ -13,13 +13,16 @@ import {
 
 interface CircularTermMasteryProps {
   known: number;
-  stillLearning: number;
+  almostMastered: number;
+  learning: number;
 }
 
 export const CircularTermMastery: React.FC<CircularTermMasteryProps> = ({
   known,
-  stillLearning,
+  almostMastered,
+  learning,
 }) => {
+  const stillLearning = almostMastered + learning;
   const [perc, setPerc] = React.useState(0);
   React.useEffect(() => {
     setTimeout(() => {
@@ -33,7 +36,7 @@ export const CircularTermMastery: React.FC<CircularTermMasteryProps> = ({
       <CircularProgress
         value={perc}
         color="blue.300"
-        trackColor="orange.300"
+        trackColor="yellow.400"
         size="100px"
         w="max"
         thickness="4px"
@@ -66,6 +69,23 @@ export const CircularTermMastery: React.FC<CircularTermMasteryProps> = ({
             </Text>
           </Center>
           <Center
+            color="yellow.400"
+            borderWidth="1.5px"
+            rounded="full"
+            borderColor="yellow.400"
+            px="2"
+            w="max"
+            shadow="sm"
+          >
+            <Text
+              fontFamily={outfit.style.fontFamily}
+              fontSize="sm"
+              fontWeight={700}
+            >
+              {almostMastered}
+            </Text>
+          </Center>
+          <Center
             color="orange.300"
             borderWidth="1.5px"
             rounded="full"
@@ -79,7 +99,7 @@ export const CircularTermMastery: React.FC<CircularTermMasteryProps> = ({
               fontSize="sm"
               fontWeight={700}
             >
-              {stillLearning}
+              {learning}
             </Text>
           </Center>
         </Stack>
@@ -92,7 +112,8 @@ export const CircularTermMastery: React.FC<CircularTermMasteryProps> = ({
           }}
         >
           <Text>Know</Text>
-          <Text>Still learning</Text>
+          <Text>Almost Mastered</Text>
+          <Text>Learning</Text>
         </Stack>
       </HStack>
     </HStack>

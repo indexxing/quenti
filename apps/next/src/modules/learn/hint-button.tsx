@@ -79,7 +79,6 @@ export const HintButton: React.FC<HintButtonProps> = ({
 
   const timeline = useLearnContext((s) => s.roundTimeline);
   const roundCounter = useLearnContext((s) => s.roundCounter);
-  const hintsUsed = useLearnContext((s) => s.hintsUsed);
   const setHintUsed = useLearnContext((s) => s.setHintUsed);
 
   const active = timeline[roundCounter];
@@ -102,15 +101,6 @@ export const HintButton: React.FC<HintButtonProps> = ({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isOpen, onClose]);
-
-  // Check if hint was already used for this term
-  React.useEffect(() => {
-    if (termId) {
-      // Reset state when term changes
-      setIsUsed(hintsUsed.has(termId));
-      setHint("");
-    }
-  }, [termId, hintsUsed]);
 
   const bgColor = useColorModeValue("white", "gray.700");
   const borderColor = useColorModeValue("gray.200", "gray.600");

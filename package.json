@@ -53,7 +53,7 @@
     "schema": "packages/prisma/schema.prisma"
   },
   "engines": {
-    "node": ">=18.x",
+    "node": ">=22.x",
     "npm": ">=7.0.0"
   },
   "packageManager": "bun@1.0.2",

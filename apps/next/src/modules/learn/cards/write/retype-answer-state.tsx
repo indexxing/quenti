@@ -67,7 +67,10 @@ export const RetypeAnswerState: React.FC<RetypeAnswerStateProps> = ({
     if (!answer.trim().length) return;
 
     // If user typed the correct answer
-    if (answer.trim() === correctAnswerToRetype?.trim()) {
+    if (
+      answer.trim().toLowerCase() ===
+      correctAnswerToRetype?.trim().toLowerCase()
+    ) {
       setIsCorrect(true);
 
       // Immediately complete retyping and move to next question
