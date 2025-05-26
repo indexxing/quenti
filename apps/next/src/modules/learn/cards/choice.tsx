@@ -67,11 +67,14 @@ export const ChoiceCard: React.FC<ChoiceCardProps> = ({ active }) => {
     if (term.id === active.term.id) {
       answerCorrectly(term.id);
 
+      // Determine the correct progression: -2 → -1 → 1
+      const newCorrectness = active.term.correctness === -2 ? -1 : 1;
+
       put.mutate({
         id: active.term.id,
         containerId: container.id,
         mode: "Learn",
-        correctness: 1,
+        correctness: newCorrectness,
         appearedInRound: active.term.appearedInRound || 0,
         incorrectCount: active.term.incorrectCount,
       });
@@ -89,7 +92,7 @@ export const ChoiceCard: React.FC<ChoiceCardProps> = ({ active }) => {
         id: active.term.id,
         containerId: container.id,
         mode: "Learn",
-        correctness: -1,
+        correctness: -2,
         appearedInRound: active.term.appearedInRound || 0,
         incorrectCount: active.term.incorrectCount + 1,
       });

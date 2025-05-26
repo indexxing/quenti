@@ -190,7 +190,7 @@ export const InteractionCard = () => {
                   px="3"
                   rounded="full"
                   visibility={
-                    active.term.correctness < 0 ? "visible" : "hidden"
+                    active.term.correctness === -2 ? "visible" : "hidden"
                   }
                 >
                   <Text fontSize="xs" fontWeight={600}>

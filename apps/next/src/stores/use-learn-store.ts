@@ -134,7 +134,17 @@ export const createLearnStore = (initProps?: Partial<LearnStoreProps>) => {
         setTimeout(() => {
           set((state) => {
             const active = state.roundTimeline[state.roundCounter]!;
-            active.term.correctness = active.type == "choice" ? 1 : 2;
+            if (active.type === "choice") {
+              // For choice questions: -2 → -1 → 1
+              if (active.term.correctness === -2) {
+                active.term.correctness = -1;
+              } else {
+                active.term.correctness = 1;
+              }
+            } else {
+              // For write questions: -1 → 2 (write questions don't use -2)
+              active.term.correctness = 2;
+            }
 
             state.endQuestionCallback(true);
             return {};
@@ -158,7 +168,8 @@ export const createLearnStore = (initProps?: Partial<LearnStoreProps>) => {
       acknowledgeIncorrect: () => {
         set((state) => {
           const active = state.roundTimeline[state.roundCounter]!;
-          active.term.correctness = -1;
+          // Set correctness based on question type: -2 for choice, -1 for write
+          active.term.correctness = active.type === "choice" ? -2 : -1;
           active.term.incorrectCount++;
 
           // Reset retyping state if active
@@ -248,7 +259,17 @@ export const createLearnStore = (initProps?: Partial<LearnStoreProps>) => {
 
         set((state) => {
           const active = state.roundTimeline[state.roundCounter]!;
-          active.term.correctness = active.type == "choice" ? 1 : 2;
+          if (active.type === "choice") {
+            // For choice questions: -2 → -1 → 1
+            if (active.term.correctness === -2) {
+              active.term.correctness = -1;
+            } else {
+              active.term.correctness = 1;
+            }
+          } else {
+            // For write questions: -1 → 2 (write questions don't use -2)
+            active.term.correctness = 2;
+          }
 
           state.endQuestionCallback(true);
           return {};
@@ -269,7 +290,8 @@ export const createLearnStore = (initProps?: Partial<LearnStoreProps>) => {
 
         set((state) => {
           const active = state.roundTimeline[state.roundCounter]!;
-          active.term.correctness = -1;
+          // Set correctness based on question type: -2 for choice, -1 for write
+          active.term.correctness = active.type === "choice" ? -2 : -1;
           active.term.incorrectCount++;
 
           state.endQuestionCallback(false);
@@ -283,7 +305,7 @@ export const createLearnStore = (initProps?: Partial<LearnStoreProps>) => {
           const currentRound = state.currentRound + (!start ? 1 : 0);
 
           const incorrectTerms = state.studiableTerms.filter(
-            (x) => x.correctness == -1,
+            (x) => x.correctness == -1 || x.correctness == -2,
           );
           const unstudied = state.studiableTerms.filter(
             (x) => x.correctness == 0,

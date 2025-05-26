@@ -49,7 +49,7 @@ export const TermMasteryTag: React.FC<TermMasteryTagProps> = ({
   let borderColor = defaultBorderColor;
   let minWidth = defaultMinWidth;
 
-  if (correctness === -1) {
+  if (correctness === -2 || correctness === -1) {
     label = "Learning";
     bgColor = learningBgColor;
     textColor = learningTextColor;

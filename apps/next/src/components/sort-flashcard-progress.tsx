@@ -63,7 +63,9 @@ export const SortFlashcardProgress: React.FC<SortFlashcardProgressProps> = ({
   const almostMastered = studiableTerms.filter(
     (t) => t.correctness === 1,
   ).length;
-  const learning = studiableTerms.filter((t) => t.correctness === -1).length;
+  const learning = studiableTerms.filter(
+    (t) => t.correctness === -1 || t.correctness === -2,
+  ).length;
   const stillLearning = almostMastered + learning;
 
   const goBack = () => {

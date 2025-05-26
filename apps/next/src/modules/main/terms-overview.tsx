@@ -131,7 +131,7 @@ const TermsByStats = () => {
   const { terms, container, injected } = useAuthedSet();
 
   let learningTerms = injected.studiableLearnTerms
-    .filter((x) => x.correctness === -1)
+    .filter((x) => x.correctness === -1 || x.correctness === -2)
     .map((x) => terms.find((t) => t.id === x.id)!)
     .filter((x) => x);
 
