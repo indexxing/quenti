@@ -34,7 +34,7 @@ export type HintType = "first" | "last" | "length";
  * HintButton Component Props
  *
  * This component provides hints to users based on the question type:
- * - For multiple choice questions, it eliminates 50% of incorrect options
+ * - For multiple choice questions, it shows only 2 choices: the correct answer and one random incorrect answer
  * - For written answers, it provides a random hint (first letter, last letter, or length)
  *
  * For multiple choice questions, hints can only be used once per term.
@@ -146,38 +146,21 @@ export const HintButton: React.FC<HintButtonProps> = ({
       (choice) => choice.id !== correctTermId,
     );
 
-    // Randomly eliminate 50% of wrong answers (or at least one)
-    const numToEliminate = Math.floor(incorrectChoices.length / 2);
-    const remainingIncorrectChoices = [...incorrectChoices];
-    const eliminatedIds: string[] = [];
+    if (incorrectChoices.length === 0) return null;
 
-    for (
-      let i = 0;
-      i < numToEliminate && remainingIncorrectChoices.length > 0;
-      i++
-    ) {
-      const randomIndex = Math.floor(
-        Math.random() * remainingIncorrectChoices.length,
-      );
-      const choiceToEliminate = remainingIncorrectChoices[randomIndex];
-      if (choiceToEliminate) {
-        eliminatedIds.push(choiceToEliminate.id);
-      }
-    }
+    // Pick one random incorrect answer
+    const randomIncorrectChoice = getRandom(incorrectChoices);
+    if (!randomIncorrectChoice) return null;
 
-    // Return remaining choices (correct + non-eliminated incorrect)
-    const remainingChoices = choices.filter(
-      (choice) =>
-        choice.id === correctTermId || !eliminatedIds.includes(choice.id),
-    );
+    // Randomly position the correct and incorrect choices
+    const remainingChoices =
+      Math.random() < 0.5
+        ? [correctChoice, randomIncorrectChoice]
+        : [randomIncorrectChoice, correctChoice];
 
     if (onEliminateChoices) {
       onEliminateChoices(remainingChoices);
     }
-
-    return `Eliminated ${numToEliminate} incorrect option${
-      numToEliminate !== 1 ? "s" : ""
-    }`;
   };
 
   const handleHint = () => {
@@ -213,7 +196,6 @@ export const HintButton: React.FC<HintButtonProps> = ({
       const choiceHint = getChoiceHint();
       if (choiceHint) setHint(choiceHint);
     } else {
-      // For written questions, generate a new hint each time (unlimited use)
       setHint(getWriteHint());
     }
   };
@@ -248,7 +230,6 @@ export const HintButton: React.FC<HintButtonProps> = ({
       <PopoverContent
         width="auto"
         bg={bgColor}
-        //borderColor={borderColor}
         borderRadius="lg"
         boxShadow={hintBoxShadow}
         _focus={{ outline: "none" }}

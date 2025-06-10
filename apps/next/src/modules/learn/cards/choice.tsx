@@ -197,7 +197,7 @@ export const ChoiceCard: React.FC<ChoiceCardProps> = ({ active }) => {
       <Grid gridTemplateColumns={{ base: "1fr", md: "1fr 1fr" }} gap="6">
         <ChoiceShortcutLayer
           choose={(i) => {
-            if (active.choices.length > i) choose(active.choices[i]!);
+            if (displayedChoices.length > i) choose(displayedChoices[i]!);
           }}
         />
         {displayedChoices.map((choice, i) => (
