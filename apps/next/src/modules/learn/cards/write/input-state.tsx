@@ -17,7 +17,6 @@ import {
   useColorModeValue,
 } from "@chakra-ui/react";
 
-import { CharacterButtonWrapper } from "../../../../components/special-characters";
 import { useAuthedSet } from "../../../../hooks/use-set";
 import { useContainerContext } from "../../../../stores/use-container-store";
 import { useLearnContext } from "../../../../stores/use-learn-store";
@@ -37,7 +36,6 @@ export const InputState: React.FC<InputStateProps> = ({ active, onSubmit }) => {
   const answerCorrectly = useLearnContext((s) => s.answerCorrectly);
   const answerIncorrectly = useLearnContext((s) => s.answerIncorrectly);
   const answerUnknownPartial = useLearnContext((s) => s.answerUnknownPartial);
-  const specialCharacters = useLearnContext((s) => s.specialCharacters);
 
   const inputBg = useColorModeValue("gray.100", "gray.800");
   const placeholderColor = useColorModeValue("gray.600", "gray.200");
@@ -85,21 +83,6 @@ export const InputState: React.FC<InputStateProps> = ({ active, onSubmit }) => {
     }
   };
 
-  const handleClick = (c: string) => {
-    const cursorPosition = inputRef.current!.selectionStart || answer.length;
-    const textBeforeCursor = answer.substring(0, cursorPosition);
-    const textAfterCursor = answer.substring(cursorPosition);
-    setAnswer(textBeforeCursor + c + textAfterCursor);
-
-    inputRef.current?.focus();
-    requestAnimationFrame(() => {
-      inputRef.current?.setSelectionRange(
-        cursorPosition + 1,
-        cursorPosition + 1,
-      );
-    });
-  };
-
   return (
     <Stack spacing={6}>
       <Stack spacing="2">
@@ -117,19 +100,6 @@ export const InputState: React.FC<InputStateProps> = ({ active, onSubmit }) => {
           </Box>
         </HStack>
         <Stack spacing="3">
-          {!!specialCharacters.length && (
-            <Box>
-              <div style={{ margin: -4, maxHeight: 128, overflowY: "auto" }}>
-                {specialCharacters.sort().map((c, i) => (
-                  <CharacterButtonWrapper
-                    key={i}
-                    character={c}
-                    handler={handleClick}
-                  />
-                ))}
-              </div>
-            </Box>
-          )}
           <Input
             ref={inputRef}
             placeholder={`Type the ${placeholderLanguage(
