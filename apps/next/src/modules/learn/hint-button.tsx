@@ -153,9 +153,10 @@ export const HintButton: React.FC<HintButtonProps> = ({
     if (!randomIncorrectChoice) return null;
 
     // Randomly position the correct and incorrect choices
-    const remainingChoices = Math.random() < 0.5
-      ? [correctChoice, randomIncorrectChoice]
-      : [randomIncorrectChoice, correctChoice];
+    const remainingChoices =
+      Math.random() < 0.5
+        ? [correctChoice, randomIncorrectChoice]
+        : [randomIncorrectChoice, correctChoice];
 
     if (onEliminateChoices) {
       onEliminateChoices(remainingChoices);
