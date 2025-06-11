@@ -62,7 +62,7 @@ export const RetypeAnswerState: React.FC<RetypeAnswerStateProps> = ({
           incorrectCount: active.term.incorrectCount + 1,
         }))();
     }
-  }, []);
+  }, [container.id, put, roundCounter, roundTimeline]);
 
   React.useEffect(() => {
     handleAcknowledgeIncorrect();
