@@ -9,7 +9,6 @@ import type { Question } from "@quenti/interfaces";
 import { api } from "@quenti/trpc";
 
 import {
-  Box,
   Button,
   ButtonGroup,
   Flex,
@@ -23,7 +22,6 @@ import {
 import { IconProgressCheck } from "@tabler/icons-react";
 
 import { ScriptFormatter } from "../../../../components/script-formatter";
-import { CharacterButtonWrapper } from "../../../../components/special-characters";
 import { useAuthedSet } from "../../../../hooks/use-set";
 import { useLearnContext } from "../../../../stores/use-learn-store";
 import { word } from "../../../../utils/terms";
@@ -42,7 +40,6 @@ export const RetypeAnswerState: React.FC<RetypeAnswerStateProps> = ({
 }) => {
   const { container } = useAuthedSet();
   const correctAnswerToRetype = useLearnContext((s) => s.correctAnswerToRetype);
-  const specialCharacters = useLearnContext((s) => s.specialCharacters);
   const completeRetyping = useLearnContext((s) => s.completeRetyping);
   const overrideCorrect = useLearnContext((s) => s.overrideCorrect);
   const acknowledgeIncorrect = useLearnContext((s) => s.acknowledgeIncorrect);
@@ -51,6 +48,25 @@ export const RetypeAnswerState: React.FC<RetypeAnswerStateProps> = ({
   const session = useSession();
 
   const put = api.studiableTerms.put.useMutation();
+
+  const handleAcknowledgeIncorrect = React.useCallback(() => {
+    const active = roundTimeline[roundCounter]!;
+    if (active.type == "write") {
+      void (async () =>
+        await put.mutateAsync({
+          id: active.term.id,
+          containerId: container.id,
+          mode: "Learn",
+          correctness: -1,
+          appearedInRound: active.term.appearedInRound || 0,
+          incorrectCount: active.term.incorrectCount + 1,
+        }))();
+    }
+  }, [container.id, put, roundCounter, roundTimeline]);
+
+  React.useEffect(() => {
+    handleAcknowledgeIncorrect();
+  }, [handleAcknowledgeIncorrect]);
 
   const inputBg = useColorModeValue("gray.100", "gray.800");
   const placeholderColor = useColorModeValue("gray.600", "gray.200");
@@ -76,8 +92,7 @@ export const RetypeAnswerState: React.FC<RetypeAnswerStateProps> = ({
       // Immediately complete retyping and move to next question
       completeRetyping();
       onComplete();
-      // Advance to the next round
-      handleAcknowledgeIncorrect();
+      acknowledgeIncorrect();
     } else {
       setIsCorrect(false);
       setAnswer("");
@@ -112,41 +127,6 @@ export const RetypeAnswerState: React.FC<RetypeAnswerStateProps> = ({
       appearedInRound: active.term.appearedInRound || 0,
       incorrectCount: active.term.incorrectCount,
     });
-  };
-
-  const handleClick = (c: string) => {
-    const cursorPosition = inputRef.current!.selectionStart || answer.length;
-    const textBeforeCursor = answer.substring(0, cursorPosition);
-    const textAfterCursor = answer.substring(cursorPosition);
-    setAnswer(textBeforeCursor + c + textAfterCursor);
-
-    inputRef.current?.focus();
-    requestAnimationFrame(() => {
-      inputRef.current?.setSelectionRange(
-        cursorPosition + 1,
-        cursorPosition + 1,
-      );
-    });
-  };
-
-  // This function is similar to the one in action-bar.tsx
-  // It handles the incorrect answer by updating the state and making API calls
-  const handleAcknowledgeIncorrect = () => {
-    acknowledgeIncorrect();
-
-    // Update the term status in the database
-    const active = roundTimeline[roundCounter]!;
-    if (active.type == "write") {
-      void (async () =>
-        await put.mutateAsync({
-          id: active.term.id,
-          containerId: container.id,
-          mode: "Learn",
-          correctness: -1,
-          appearedInRound: active.term.appearedInRound || 0,
-          incorrectCount: active.term.incorrectCount + 1,
-        }))();
-    }
   };
 
   return (
@@ -213,19 +193,6 @@ export const RetypeAnswerState: React.FC<RetypeAnswerStateProps> = ({
             </Text>
           )}
           <Stack spacing="3">
-            {!!specialCharacters.length && (
-              <Box>
-                <div style={{ margin: -4, maxHeight: 128, overflowY: "auto" }}>
-                  {specialCharacters.sort().map((c, i) => (
-                    <CharacterButtonWrapper
-                      key={i}
-                      character={c}
-                      handler={handleClick}
-                    />
-                  ))}
-                </div>
-              </Box>
-            )}
             <Input
               ref={inputRef}
               placeholder="Re-type the correct answer"

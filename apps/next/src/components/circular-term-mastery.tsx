@@ -27,7 +27,7 @@ export const CircularTermMastery: React.FC<CircularTermMasteryProps> = ({
   React.useEffect(() => {
     setTimeout(() => {
       setPerc((known / (known + stillLearning)) * 100);
-    }, 300);
+    }, 50);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
