@@ -71,7 +71,13 @@ const LearnContainer = () => {
   const roundSummary = useLearnContext((s) => s.roundSummary);
   const setFeedbackBank = useLearnContext((s) => s.setFeedbackBank);
 
-  const completeLearnRound = api.container.completeLearnRound.useMutation();
+  const utils = api.useUtils();
+  const completeLearnRound = api.container.completeLearnRound.useMutation({
+    onSuccess: async () => {
+      // Immediately refresh the study set data to update correctness tags
+      await utils.studySets.byId.invalidate({ studySetId: id });
+    },
+  });
   const discoverable = api.disoverable.fetchInsults.useQuery(undefined, {
     enabled: extendedFeedbackBank,
   });
