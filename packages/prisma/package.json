@@ -17,14 +17,14 @@
     "postinstall": "bunx prisma generate"
   },
   "dependencies": {
-    "@prisma/client": "6.9.0",
+    "@prisma/client": "6.10.0",
     "@quenti/env": "workspace:*",
     "zod": "^3.22.4",
     "zod-prisma": "^0.5.4"
   },
   "devDependencies": {
     "@types/node": "^20.10.4",
-    "prisma": "6.9.0",
+    "prisma": "6.10.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.3.3"
   }
