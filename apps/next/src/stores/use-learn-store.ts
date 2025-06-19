@@ -53,7 +53,7 @@ interface LearnState extends LearnStoreProps {
   acknowledgeIncorrect: () => void;
   answerUnknownPartial: () => void;
   overrideCorrect: () => void;
-  endQuestionCallback: (correct: boolean) => void;
+  endQuestionCallback: () => void;
   correctFromUnknown: (termId: string) => void;
   incorrectFromUnknown: (termId: string) => void;
   nextRound: (start?: boolean) => void;
@@ -146,30 +146,32 @@ export const createLearnStore = (initProps?: Partial<LearnStoreProps>) => {
               active.term.correctness = 2;
             }
 
-            state.endQuestionCallback(true);
+            state.endQuestionCallback();
             return {};
           });
         }, 1000);
       },
       answerIncorrectly: (termId) => {
-        set((state) => ({
-          answered: termId,
-          status: "incorrect",
-          roundTimeline:
-            state.roundProgress != state.termsThisRound - 1
-              ? [
-                  ...state.roundTimeline,
-                  state.roundTimeline[state.roundCounter]!,
-                ]
-              : state.roundTimeline,
-          prevTermWasIncorrect: true,
-        }));
+        set((state) => {
+          const active = state.roundTimeline[state.roundCounter]!;
+          const shouldRepeat = active.term.correctness === -2;
+          return {
+            answered: termId,
+            status: "incorrect",
+            roundTimeline:
+              shouldRepeat && state.roundProgress != state.termsThisRound - 1
+                ? [...state.roundTimeline, active]
+                : state.roundTimeline,
+            prevTermWasIncorrect: true,
+          };
+        });
       },
       acknowledgeIncorrect: () => {
         set((state) => {
           const active = state.roundTimeline[state.roundCounter]!;
-          // Set correctness based on question type: -2 for choice, -1 for write
-          active.term.correctness = active.type === "choice" ? -2 : -1;
+          const shouldRepeat = active.term.correctness === -2;
+          const newCorrectness = active.type === "choice" ? -2 : -1;
+          active.term.correctness = newCorrectness;
           active.term.incorrectCount++;
 
           // Reset retyping state if active
@@ -180,7 +182,12 @@ export const createLearnStore = (initProps?: Partial<LearnStoreProps>) => {
             });
           }
 
-          state.endQuestionCallback(false);
+          if (active.term.correctness !== -1 && active.term.correctness !== 1) {
+            state.roundProgress++;
+          }
+          if (!shouldRepeat) state.prevTermWasIncorrect = false;
+
+          state.endQuestionCallback();
           return {};
         });
       },
@@ -206,14 +213,14 @@ export const createLearnStore = (initProps?: Partial<LearnStoreProps>) => {
             roundTimeline.splice(-1);
           }
 
-          state.endQuestionCallback(true);
+          state.endQuestionCallback();
           return {
             roundTimeline,
             prevTermWasIncorrect: false,
           };
         });
       },
-      endQuestionCallback: (correct) => {
+      endQuestionCallback: () => {
         set((state) => {
           const masteredCount = state.studiableTerms.filter(
             (x) => x.correctness == 2,
@@ -225,7 +232,7 @@ export const createLearnStore = (initProps?: Partial<LearnStoreProps>) => {
             return { completed: true, hasMissedTerms };
           }
 
-          if (state.roundProgress === state.termsThisRound - 1) {
+          if (state.roundCounter === state.roundTimeline.length - 1) {
             return {
               roundSummary: {
                 round: state.currentRound,
@@ -241,7 +248,12 @@ export const createLearnStore = (initProps?: Partial<LearnStoreProps>) => {
           }
 
           const roundCounter = state.roundCounter + 1;
-          const roundProgress = state.roundProgress + (correct ? 1 : 0);
+          const active = state.roundTimeline[state.roundCounter]!;
+          const progressIncrement =
+            active.term.correctness !== -1 && active.term.correctness !== 1
+              ? 1
+              : 0;
+          const roundProgress = state.roundProgress + progressIncrement;
 
           return {
             roundCounter,
@@ -271,30 +283,37 @@ export const createLearnStore = (initProps?: Partial<LearnStoreProps>) => {
             active.term.correctness = 2;
           }
 
-          state.endQuestionCallback(true);
+          state.endQuestionCallback();
           return {};
         });
       },
       incorrectFromUnknown: (termId) => {
-        set((state) => ({
-          answered: termId,
-          roundTimeline:
-            state.roundProgress != state.termsThisRound - 1
-              ? [
-                  ...state.roundTimeline,
-                  state.roundTimeline[state.roundCounter]!,
-                ]
-              : state.roundTimeline,
-          prevTermWasIncorrect: true,
-        }));
+        set((state) => {
+          const active = state.roundTimeline[state.roundCounter]!;
+          const shouldRepeat = active.term.correctness === -2;
+          return {
+            answered: termId,
+            roundTimeline:
+              shouldRepeat && state.roundProgress != state.termsThisRound - 1
+                ? [...state.roundTimeline, active]
+                : state.roundTimeline,
+            prevTermWasIncorrect: true,
+          };
+        });
 
         set((state) => {
           const active = state.roundTimeline[state.roundCounter]!;
-          // Set correctness based on question type: -2 for choice, -1 for write
-          active.term.correctness = active.type === "choice" ? -2 : -1;
+          const shouldRepeat = active.term.correctness === -2;
+          const newCorrectness = active.type === "choice" ? -2 : -1;
+          active.term.correctness = newCorrectness;
           active.term.incorrectCount++;
 
-          state.endQuestionCallback(false);
+          if (active.term.correctness !== -1 && active.term.correctness !== 1) {
+            state.roundProgress++;
+          }
+          if (!shouldRepeat) state.prevTermWasIncorrect = false;
+
+          state.endQuestionCallback();
           return {};
         });
       },
