@@ -157,10 +157,7 @@ export const RetypeAnswerState: React.FC<RetypeAnswerStateProps> = ({
               onClick={handleOverrideCorrect}
               px={{ base: 0, md: 2 }}
               leftIcon={
-                <IconProgressCheck
-                  style={{ marginRight: -4 }}
-                  size={16}
-                />
+                <IconProgressCheck style={{ marginRight: -4 }} size={16} />
               }
             >
               Override - I was correct
