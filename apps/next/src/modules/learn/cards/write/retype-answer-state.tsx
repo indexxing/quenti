@@ -1,5 +1,7 @@
 // eslint-disable-file @typescript-eslint/no-floating-promises
+import { diffChars } from "diff";
 import { motion, useAnimationControls } from "framer-motion";
+import levenshtein from "js-levenshtein";
 import { useSession } from "next-auth/react";
 import { log } from "next-axiom";
 import React from "react";
@@ -76,6 +78,13 @@ export const RetypeAnswerState: React.FC<RetypeAnswerStateProps> = ({
 
   const inputRef = React.useRef<HTMLInputElement>(null);
   const controls = useAnimationControls();
+
+  const diff = guess
+    ? diffChars(guess, word(active.answerMode, active.term, "answer"))
+    : [];
+  const showDiff = guess
+    ? levenshtein(guess, word(active.answerMode, active.term, "answer")) <= 3
+    : false;
 
   const handleSubmit = () => {
     if (!answer.trim().length) return;
@@ -160,7 +169,23 @@ export const RetypeAnswerState: React.FC<RetypeAnswerStateProps> = ({
         </Flex>
         <AnswerCard
           text={
-            <ScriptFormatter>{correctAnswerToRetype || ""}</ScriptFormatter>
+            <>
+              {showDiff ? (
+                diff.map((x, i) =>
+                  x.added && x.value.length <= 3 ? (
+                    <b key={i}>
+                      <ScriptFormatter>{x.value}</ScriptFormatter>
+                    </b>
+                  ) : x.removed ? (
+                    ""
+                  ) : (
+                    <ScriptFormatter>{x.value}</ScriptFormatter>
+                  ),
+                )
+              ) : (
+                <ScriptFormatter>{correctAnswerToRetype || ""}</ScriptFormatter>
+              )}
+            </>
           }
           correct={true}
           showIcon={true}
