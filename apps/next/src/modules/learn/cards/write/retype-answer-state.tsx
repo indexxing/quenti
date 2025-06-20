@@ -148,24 +148,24 @@ export const RetypeAnswerState: React.FC<RetypeAnswerStateProps> = ({
           gap={{ base: 0, md: 4 }}
         >
           <GenericLabel>Correct answer</GenericLabel>
-          <Button
-            size="sm"
-            flexShrink="0"
-            variant="ghost"
-            fontSize="xs"
-            onClick={handleOverrideCorrect}
-            px={{ base: 0, md: 2 }}
-            leftIcon={
-              <IconProgressCheck
-                style={{
-                  marginRight: -4,
-                }}
-                size={16}
-              />
-            }
-          >
-            Override - I was correct
-          </Button>
+          {guess && (
+            <Button
+              size="sm"
+              flexShrink="0"
+              variant="ghost"
+              fontSize="xs"
+              onClick={handleOverrideCorrect}
+              px={{ base: 0, md: 2 }}
+              leftIcon={
+                <IconProgressCheck
+                  style={{ marginRight: -4 }}
+                  size={16}
+                />
+              }
+            >
+              Override - I was correct
+            </Button>
+          )}
         </Flex>
         <AnswerCard
           text={
