@@ -3,6 +3,7 @@ import dynamic from "next/dynamic";
 import { useState } from "react";
 
 import { Display } from "@quenti/components/display";
+import { api } from "@quenti/trpc";
 
 import {
   Box,
@@ -20,6 +21,7 @@ import { IconEditCircle, IconStar, IconStarFilled } from "@tabler/icons-react";
 
 import { SetCreatorOnly } from "../../components/set-creator-only";
 import { SquareAssetPreview } from "../../components/terms/square-asset-preview";
+import { useAuthedSet } from "../../hooks/use-set";
 import { useContainerContext } from "../../stores/use-container-store";
 import { useLearnContext } from "../../stores/use-learn-store";
 import { richWord } from "../../utils/terms";
@@ -46,6 +48,10 @@ export const InteractionCard = () => {
   const starredTerms = useContainerContext((s) => s.starredTerms);
   const starTerm = useContainerContext((s) => s.starTerm);
   const unstarTerm = useContainerContext((s) => s.unstarTerm);
+  const { container } = useAuthedSet();
+
+  const starMutation = api.container.starTerm.useMutation();
+  const unstarMutation = api.container.unstarTerm.useMutation();
 
   const correctColor = useColorModeValue("#38a169", "#68d391");
   const incorrectColor = useColorModeValue("#e53e3e", "#fc8181");
@@ -64,8 +70,15 @@ export const InteractionCard = () => {
   const onRequestStar = () => {
     if (!starred) {
       starTerm(active.term.id);
+      starMutation.mutate({
+        termId: active.term.id,
+        containerId: container.id,
+      });
     } else {
       unstarTerm(active.term.id);
+      unstarMutation.mutate({
+        termId: active.term.id,
+      });
     }
   };
 
