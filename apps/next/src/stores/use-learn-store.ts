@@ -239,7 +239,7 @@ export const createLearnStore = (initProps?: Partial<LearnStoreProps>) => {
                 termsThisRound: Array.from(
                   new Set(state.roundTimeline.map((q) => q.term)),
                 ),
-                progress: state.studiableTerms.filter((x) => x.correctness != 0)
+                progress: state.studiableTerms.filter((x) => x.correctness == 2)
                   .length,
                 totalTerms: state.numTerms,
               },
