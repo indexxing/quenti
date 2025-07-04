@@ -12,6 +12,7 @@ import { useSetPropertiesStore } from "../../stores/use-set-properties-store";
 import { AnswerModeSection } from "./settings/answer-mode-section";
 import { ExtendedFeedbackSection } from "./settings/extended-feedback-bank-section";
 import { MultipleAnswerModeSection } from "./settings/multiple-answer-mode-section";
+import { QuestionTypeSection } from "./settings/question-type-section";
 import { RequireRetypingSection } from "./settings/require-retyping-section";
 import { ResetProgressSection } from "./settings/reset-progress-section";
 import { ShuffleLearnSection } from "./settings/shuffle-learn-section";
@@ -49,6 +50,7 @@ export const LearnSettingsModal: React.FC<LearnSettingsModal> = ({
   const studyStarred = useContainerContext((s) => s.studyStarred);
   const answerWith = useContainerContext((s) => s.answerWith);
   const requireRetyping = useContainerContext((s) => s.requireRetyping);
+  const learnQuestionTypes = useContainerContext((s) => s.learnQuestionTypes);
   const multipleAnswerMode = useContainerContext((s) => s.multipleAnswerMode);
   const setIsDirty = useSetPropertiesStore((s) => s.setIsDirty);
 
@@ -63,7 +65,9 @@ export const LearnSettingsModal: React.FC<LearnSettingsModal> = ({
             container.shuffleLearn !== shuffleLearn ||
             container.answerWith !== answerWith ||
             container.studyStarred !== studyStarred ||
-            container.requireRetyping !== requireRetyping;
+            container.requireRetyping !== requireRetyping ||
+            (container.learnQuestionTypes as ("choice" | "write")[]).join() !==
+              learnQuestionTypes.join();
 
           setIsDirty(isDirty);
           onClose();
@@ -75,6 +79,8 @@ export const LearnSettingsModal: React.FC<LearnSettingsModal> = ({
         <Modal.Content>
           <Modal.Body>
             <Modal.Heading>Settings</Modal.Heading>
+            <QuestionTypeSection />
+            <Modal.Divider />
             <StudyStarredSection />
             <Modal.Divider />
             <ShuffleLearnSection />
