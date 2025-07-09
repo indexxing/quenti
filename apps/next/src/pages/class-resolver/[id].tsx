@@ -117,11 +117,12 @@ const ClassResolver = ({
 };
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
-  if (!db) return { props: { class: null } };
+  const dbInstance = await db;
+  if (!dbInstance) return { props: { class: null } };
 
   const id = ctx.query?.id as string;
 
-  const classJoinCode = await db.query.classJoinCode.findFirst({
+  const classJoinCode = await dbInstance.query.classJoinCode.findFirst({
     where: eq(classJoinCodeTable.code, id.substring(1)),
     with: {
       class: true,
@@ -130,13 +131,13 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
 
   if (!classJoinCode) return { props: { class: null } };
 
-  const studySets = await db
+  const studySets = await dbInstance
     .select({
       studySets: count(),
     })
     .from(studySetsOnClasses)
     .where(eq(studySetsOnClasses.classId, classJoinCode.classId));
-  const folders = await db
+  const folders = await dbInstance
     .select({
       folders: count(),
     })
