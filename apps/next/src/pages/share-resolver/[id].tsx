@@ -22,8 +22,7 @@ const ShareResolver = ({
 };
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
-  const dbInstance = await db;
-  if (!dbInstance) return { props: { entity: null } };
+  const dbInstance = db;
 
   ctx.res.setHeader("Cache-Control", "s-maxage=1, stale-while-revalidate");
 

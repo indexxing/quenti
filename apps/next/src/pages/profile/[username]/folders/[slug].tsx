@@ -52,8 +52,7 @@ FolderPage.PageWrapper = PageWrapper;
 FolderPage.getLayout = getLayout;
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
-  const dbInstance = await db;
-  if (!dbInstance) return { props: { set: null } };
+  const dbInstance = db;
 
   const username = (ctx.query?.username as string).substring(1);
   const idOrSlug = ctx.query?.slug as string;
@@ -89,7 +88,7 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
   const { count } = (
     await dbInstance
       .select({
-        count: sql<number>`cast(count(${studySetsOnFolders.studySetId}) as unsigned)`,
+        count: sql<number>`count(${studySetsOnFolders.studySetId})::bigint`,
       })
       .from(studySetsOnFolders)
       .where(eq(studySetsOnFolders.folderId, targetFolder.id))

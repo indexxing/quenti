@@ -3,7 +3,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 
 import { HeadSeo } from "@quenti/components/head-seo";
-import { count, db, eq } from "@quenti/drizzle";
+import { db, eq, sql } from "@quenti/drizzle";
 import {
   classJoinCode as classJoinCodeTable,
   foldersOnClasses,
@@ -117,8 +117,7 @@ const ClassResolver = ({
 };
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
-  const dbInstance = await db;
-  if (!dbInstance) return { props: { class: null } };
+  const dbInstance = db;
 
   const id = ctx.query?.id as string;
 
@@ -131,25 +130,29 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
 
   if (!classJoinCode) return { props: { class: null } };
 
-  const studySets = await dbInstance
-    .select({
-      studySets: count(),
-    })
-    .from(studySetsOnClasses)
-    .where(eq(studySetsOnClasses.classId, classJoinCode.classId));
-  const folders = await dbInstance
-    .select({
-      folders: count(),
-    })
-    .from(foldersOnClasses)
-    .where(eq(foldersOnClasses.classId, classJoinCode.classId));
+  const { studySets } = (
+    await dbInstance
+      .select({
+        studySets: sql<number>`count(*)::bigint`,
+      })
+      .from(studySetsOnClasses)
+      .where(eq(studySetsOnClasses.classId, classJoinCode.classId))
+  )[0]!;
+  const { folders } = (
+    await dbInstance
+      .select({
+        folders: sql<number>`count(*)::bigint`,
+      })
+      .from(foldersOnClasses)
+      .where(eq(foldersOnClasses.classId, classJoinCode.classId))
+  )[0]!;
 
   return {
     props: {
       class: {
         ...classJoinCode.class,
-        studySets: studySets[0]?.studySets || 0,
-        folders: folders[0]?.folders || 0,
+        studySets,
+        folders,
       },
     },
   };

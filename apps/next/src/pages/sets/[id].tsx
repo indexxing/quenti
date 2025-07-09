@@ -46,8 +46,7 @@ const Set = ({ set, collab }: inferSSRProps<typeof getServerSideProps>) => {
 };
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
-  const dbInstance = await db;
-  if (!dbInstance) return { props: { set: null } };
+  const dbInstance = db;
 
   const set = await dbInstance.query.studySet.findFirst({
     where: eq(studySet.id, ctx.query?.id as string),
@@ -86,7 +85,7 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
   const { count } = (
     await dbInstance
       .select({
-        count: sql<number>`cast(count(*) as unsigned)`,
+        count: sql<number>`count(*)::bigint`,
       })
       .from(term)
       .where(and(eq(term.studySetId, set.id), eq(term.ephemeral, false)))
@@ -98,7 +97,7 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
     const { total } = (
       await dbInstance
         .select({
-          total: sql<number>`cast(count(*) as unsigned)`,
+          total: sql<number>`count(*)::bigint`,
         })
         .from(studySetCollaborator)
         .where(eq(studySetCollaborator.studySetId, set.id))
