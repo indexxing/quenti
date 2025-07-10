@@ -11,7 +11,13 @@ type CreateOptions = {
 };
 
 export const createHandler = async ({ ctx, input }: CreateOptions) => {
-  const slug = slugify(input.title, { lower: true });
+  let slug = slugify(input.title, { lower: true });
+
+  // Ensure slug is not empty
+  if (!slug) {
+    slug = Math.random().toString(36).substring(2, 15)
+  }
+
   const existing = await ctx.prisma.folder.findUnique({
     where: {
       userId_slug: {
