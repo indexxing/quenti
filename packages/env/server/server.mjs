@@ -55,12 +55,10 @@ export const env = createEnv({
     SERVER_NAME: z.enum(["production", "staging"]).optional(),
     BYPASS_ORG_DOMAIN_BLACKLIST: z.string().optional(),
     ENABLE_EMAIL_WHITELIST: z.string().optional(),
-    NEON: z
-      .string()
-      .optional()
-      .default("false")
-      .refine((s) => s === "true" || s === "false")
-      .transform((s) => s === "true"),
+    NEON: z.preprocess(
+      (val) => val === "true" || val === true,
+      z.boolean().default(false),
+    ),
   },
   skipValidation: process.env.SKIP_ENV_VALIDATION === "true",
 });
