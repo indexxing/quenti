@@ -29,6 +29,7 @@ const UserPage = ({ user }: inferSSRProps<typeof getServerSideProps>) => {
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
   const dbInstance = db;
+  if (!dbInstance) return { props: { user: null } };
 
   const _username = ctx.query?.username as string;
   const username = _username.substring(1);

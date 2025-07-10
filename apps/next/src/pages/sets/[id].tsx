@@ -47,6 +47,7 @@ const Set = ({ set, collab }: inferSSRProps<typeof getServerSideProps>) => {
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
   const dbInstance = db;
+  if (!dbInstance) return { props: { set: null, collab: false } };
 
   const set = await dbInstance.query.studySet.findFirst({
     where: eq(studySet.id, ctx.query?.id as string),

@@ -67,7 +67,11 @@ Get up and running by following these steps.
 
      ![ID and Secret Screenshot](https://files.readme.io/a136be9-GCPOAuthstep5.png)
 
-5. ~~Start up a local PostgreSQL database with~~ Neon Serverless Database is required for database to function
+5. Start up a local postgres instance with
+
+   ```sh
+   docker-compose -f docker-compose.postgres.yml up
+   ```
 
 6. Push schema changes and generate the Prisma client
 

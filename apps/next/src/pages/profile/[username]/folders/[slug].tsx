@@ -53,6 +53,7 @@ FolderPage.getLayout = getLayout;
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
   const dbInstance = db;
+  if (!dbInstance) return { props: { folder: null } };
 
   const username = (ctx.query?.username as string).substring(1);
   const idOrSlug = ctx.query?.slug as string;

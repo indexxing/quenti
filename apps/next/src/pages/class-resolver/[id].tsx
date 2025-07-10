@@ -118,6 +118,7 @@ const ClassResolver = ({
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
   const dbInstance = db;
+  if (!dbInstance) return { props: { class: null } };
 
   const id = ctx.query?.id as string;
 
@@ -133,7 +134,7 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
   const { studySets } = (
     await dbInstance
       .select({
-        studySets: sql<number>`count(*)::bigint`,
+        studySets: sql<number>`cast(count(*) as unsigned)`,
       })
       .from(studySetsOnClasses)
       .where(eq(studySetsOnClasses.classId, classJoinCode.classId))
@@ -141,7 +142,7 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
   const { folders } = (
     await dbInstance
       .select({
-        folders: sql<number>`count(*)::bigint`,
+        folders: sql<number>`cast(count(*) as unsigned)`,
       })
       .from(foldersOnClasses)
       .where(eq(foldersOnClasses.classId, classJoinCode.classId))
