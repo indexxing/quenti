@@ -364,14 +364,14 @@ export const createLearnStore = (initProps?: Partial<LearnStoreProps>) => {
             return x;
           });
 
-          const termsThisRound = unstudied
-            .concat(incorrectTerms)
+          const termsThisRound = incorrectTerms
             .concat(
               // Add the familiar terms that haven't been seen at least 2 rounds ago
               familiarTermsWithRound.filter(
                 (x) => currentRound - x.appearedInRound! >= 2,
               ),
             )
+            .concat(unstudied)
             .concat(familiarTerms) // Add the rest of the familiar terms if there's nothing else left
             .slice(0, LEARN_TERMS_IN_ROUND);
 
