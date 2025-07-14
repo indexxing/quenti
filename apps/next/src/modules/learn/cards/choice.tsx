@@ -35,6 +35,7 @@ interface ChoiceCardProps {
 export const ChoiceCard: React.FC<ChoiceCardProps> = ({ active }) => {
   const session = useSession();
   const { container } = useAuthedSet();
+  const questionTypes = container.learnQuestionTypes as ("choice" | "write")[];
   const answered = useLearnContext((s) => s.answered);
   const status = useLearnContext((s) => s.status);
   const answerCorrectly = useLearnContext((s) => s.answerCorrectly);
@@ -67,8 +68,16 @@ export const ChoiceCard: React.FC<ChoiceCardProps> = ({ active }) => {
     if (term.id === active.term.id) {
       answerCorrectly(term.id);
 
-      // Determine the correct progression: -2 → -1 → 1
-      const newCorrectness = active.term.correctness === -2 ? -1 : 1;
+      let newCorrectness: number;
+      if (
+        questionTypes.length === 1 &&
+        (active.term.correctness === 0 || active.term.correctness === -1)
+      ) {
+        newCorrectness = 2;
+      } else {
+        // Determine the correct progression: -2 → -1 → 1
+        newCorrectness = active.term.correctness === -2 ? -1 : 1;
+      }
 
       put.mutate({
         id: active.term.id,
