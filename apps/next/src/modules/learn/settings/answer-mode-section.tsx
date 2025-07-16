@@ -21,7 +21,7 @@ export const AnswerModeSection = () => {
       <Stack spacing={0} w="full">
         <Text fontWeight={700}>Answer with</Text>
         <Text fontSize="sm" color={mutedColor}>
-          Choose how to answer when studying
+          Require re-typing of correct answer after incorrect response
         </Text>
       </Stack>
       <Box w="60">
