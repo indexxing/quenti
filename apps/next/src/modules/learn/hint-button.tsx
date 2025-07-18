@@ -73,7 +73,7 @@ export const HintButton: React.FC<HintButtonProps> = ({
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [isUsed, setIsUsed] = React.useState(false);
   const [hint, setHint] = React.useState<string>("");
-  // Removed unused hintType state
+  const [lastHintType, setLastHintType] = React.useState<HintType | null>(null);
   const popoverRef = React.useRef<HTMLDivElement>(null);
   const [forceClose, setForceClose] = React.useState(false);
 
@@ -108,29 +108,36 @@ export const HintButton: React.FC<HintButtonProps> = ({
   const hintBoxShadow = useColorModeValue("md", "dark-lg");
 
   const getWriteHint = () => {
-    if (!answer) return "";
+    if (!answer) return { hint: "", type: null };
 
-    // Randomly select between showing first character, last character, or length
+    // Exclude last used hint type
     const hintTypes: HintType[] = ["first", "last", "length"];
-    const selectedHintType = getRandom(hintTypes);
+    const availableHintTypes = lastHintType
+      ? hintTypes.filter((type) => type !== lastHintType)
+      : hintTypes;
+    const selectedHintType = getRandom(availableHintTypes);
 
     // Clean up the answer and make more resilient
     const cleanAnswer = answer.trim();
-
+    let hintText = "";
     switch (selectedHintType) {
       case "first":
-        return `The word start with ${cleanAnswer[0] || "?"}`;
+        hintText = `The word start with ${cleanAnswer[0] || "?"}`;
+        break;
       case "last":
-        return `The word ends with ${
+        hintText = `The word ends with ${
           cleanAnswer[cleanAnswer.length - 1] || "?"
         }`;
+        break;
       case "length":
-        return `The word has ${cleanAnswer.length} character${
+        hintText = `The word has ${cleanAnswer.length} character${
           cleanAnswer.length !== 1 ? "s" : ""
         }`;
+        break;
       default:
-        return "";
+        hintText = "";
     }
+    return { hint: hintText, type: selectedHintType };
   };
 
   const getChoiceHint = () => {
@@ -189,7 +196,9 @@ export const HintButton: React.FC<HintButtonProps> = ({
       const choiceHint = getChoiceHint();
       if (choiceHint) setHint(choiceHint);
     } else {
-      setHint(getWriteHint());
+      const { hint: newHint, type: newType } = getWriteHint();
+      setHint(newHint);
+      if (newType) setLastHintType(newType);
     }
   };
 
