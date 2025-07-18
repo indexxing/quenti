@@ -73,9 +73,9 @@ export const HintButton: React.FC<HintButtonProps> = ({
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [isUsed, setIsUsed] = React.useState(false);
   const [hint, setHint] = React.useState<string>("");
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [hintType, setHintType] = React.useState<HintType>("first");
+  // Removed unused hintType state
   const popoverRef = React.useRef<HTMLDivElement>(null);
+  const [forceClose, setForceClose] = React.useState(false);
 
   const timeline = useLearnContext((s) => s.roundTimeline);
   const roundCounter = useLearnContext((s) => s.roundCounter);
@@ -113,7 +113,6 @@ export const HintButton: React.FC<HintButtonProps> = ({
     // Randomly select between showing first character, last character, or length
     const hintTypes: HintType[] = ["first", "last", "length"];
     const selectedHintType = getRandom(hintTypes);
-    setHintType(selectedHintType);
 
     // Clean up the answer and make more resilient
     const cleanAnswer = answer.trim();
@@ -170,24 +169,18 @@ export const HintButton: React.FC<HintButtonProps> = ({
     // Only mark as used for choice questions
     if (type === "choice") {
       setIsUsed(true);
-      // Mark this term as having used a hint for choice questions only
       if (termId) {
         setHintUsed(termId, true);
       }
     }
 
-    // If the popover is already open, close it first to ensure it reopens
-    if (isOpen) {
-      onClose();
-      // Use setTimeout to ensure the state updates before reopening
-      setTimeout(() => {
-        onOpen();
-        updateHintContent();
-      }, 50);
-    } else {
+    // Always close popover first, then reopen after a short delay
+    setForceClose(true);
+    setTimeout(() => {
+      setForceClose(false);
       onOpen();
       updateHintContent();
-    }
+    }, 100);
   };
 
   // Extract hint generation logic to a separate function for reusability
@@ -206,7 +199,7 @@ export const HintButton: React.FC<HintButtonProps> = ({
       closeOnBlur={true}
       closeOnEsc={true}
       returnFocusOnClose={false}
-      isOpen={isOpen && !!hint}
+      isOpen={!forceClose && isOpen && !!hint}
       onClose={onClose}
     >
       <PopoverTrigger>
@@ -245,41 +238,83 @@ export const HintButton: React.FC<HintButtonProps> = ({
         <PopoverBody p={4}>
           <Box position="relative">
             {type === "write" && (
-              <Box
-                position="absolute"
-                bottom={-4}
-                right={4}
-                width={0}
-                height={0}
-                borderLeft="8px solid transparent"
-                borderRight="8px solid transparent"
-                borderTop={`8px solid ${borderColor}`}
-                transform="translateY(50%)"
-              />
-            )}
-            {type === "write" && (
-              <Box
-                position="absolute"
-                bottom={-3.5}
-                right={4}
-                width={0}
-                height={0}
-                borderLeft="7px solid transparent"
-                borderRight="7px solid transparent"
-                borderTop={`7px solid ${hintBoxBg}`}
-                transform="translateY(50%)"
-                zIndex={1}
-              />
+              <>
+                <Box
+                  position="absolute"
+                  bottom={
+                    typeof window !== "undefined" && window.innerWidth < 600
+                      ? -8
+                      : -4
+                  }
+                  right={
+                    typeof window !== "undefined" && window.innerWidth < 600
+                      ? 2
+                      : 4
+                  }
+                  width={0}
+                  height={0}
+                  style={{
+                    borderLeft:
+                      typeof window !== "undefined" && window.innerWidth < 600
+                        ? "12px solid transparent"
+                        : "8px solid transparent",
+                    borderRight:
+                      typeof window !== "undefined" && window.innerWidth < 600
+                        ? "12px solid transparent"
+                        : "8px solid transparent",
+                    borderTop:
+                      typeof window !== "undefined" && window.innerWidth < 600
+                        ? `12px solid ${borderColor}`
+                        : `8px solid ${borderColor}`,
+                  }}
+                  transform="translateY(50%)"
+                  display="block"
+                />
+                <Box
+                  position="absolute"
+                  bottom={
+                    typeof window !== "undefined" && window.innerWidth < 600
+                      ? -7
+                      : -3.5
+                  }
+                  right={
+                    typeof window !== "undefined" && window.innerWidth < 600
+                      ? 2
+                      : 4
+                  }
+                  width={0}
+                  height={0}
+                  style={{
+                    borderLeft:
+                      typeof window !== "undefined" && window.innerWidth < 600
+                        ? "11px solid transparent"
+                        : "7px solid transparent",
+                    borderRight:
+                      typeof window !== "undefined" && window.innerWidth < 600
+                        ? "11px solid transparent"
+                        : "7px solid transparent",
+                    borderTop:
+                      typeof window !== "undefined" && window.innerWidth < 600
+                        ? `11px solid ${hintBoxBg}`
+                        : `7px solid ${hintBoxBg}`,
+                  }}
+                  transform="translateY(50%)"
+                  zIndex={1}
+                  display="block"
+                />
+              </>
             )}
             <Box
-              px={4}
-              py={3}
+              px={[2, 4]}
+              py={[2, 3]}
               borderWidth="1px"
               borderColor={borderColor}
               borderRadius="xl"
               bg={type === "write" ? hintBoxBg : undefined}
               boxShadow={type === "write" ? "sm" : undefined}
               position="relative"
+              maxWidth={{ base: "90vw", md: "320px" }}
+              fontSize={{ base: "sm", md: "md" }}
             >
               <Text fontWeight={600}>{hint}</Text>
             </Box>
