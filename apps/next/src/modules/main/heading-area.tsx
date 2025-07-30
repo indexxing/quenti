@@ -44,6 +44,8 @@ export const HeadingArea = () => {
   const text = useColorModeValue("gray.600", "gray.400");
   const tagBg = useColorModeValue("gray.200", "gray.750");
   const menuBg = useColorModeValue("white", "gray.800");
+  const folderColor = useColorModeValue("gray.600", "gray.900");
+  const folderHoverColor = useColorModeValue("gray.900", "gray.600");
 
   const deleteSet = api.studySets.delete.useMutation({
     onSuccess: async () => {
@@ -119,10 +121,10 @@ export const HeadingArea = () => {
               display="flex"
               alignItems="center"
               gap={2}
-              color={useColorModeValue("gray.600", "gray.900")}
+              color={folderColor}
               transition="all 0.2s ease"
               _hover={{
-                color: useColorModeValue("gray.900", "gray.600"),
+                color: folderHoverColor,
                 textDecoration: "none",
               }}
             >
