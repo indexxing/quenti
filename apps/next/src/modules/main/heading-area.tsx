@@ -27,6 +27,7 @@ import {
 import {
   IconDotsVertical,
   IconEditCircle,
+  IconFolder,
   IconTrash,
   IconUsersGroup,
 } from "@tabler/icons-react";
@@ -38,11 +39,13 @@ import { SetCreatorOnly } from "../../components/set-creator-only";
 import { useSet } from "../../hooks/use-set";
 
 export const HeadingArea = () => {
-  const { id, title, type, tags, terms, visibility } = useSet();
+  const { id, title, type, tags, terms, visibility, folders } = useSet();
   const router = useRouter();
   const text = useColorModeValue("gray.600", "gray.400");
   const tagBg = useColorModeValue("gray.200", "gray.750");
   const menuBg = useColorModeValue("white", "gray.800");
+  const folderColor = useColorModeValue("gray.600", "gray.900");
+  const folderHoverColor = useColorModeValue("gray.900", "gray.600");
 
   const deleteSet = api.studySets.delete.useMutation({
     onSuccess: async () => {
@@ -107,6 +110,27 @@ export const HeadingArea = () => {
                 ))}
               </HStack>
             )}
+          </HStack>
+        )}
+        {folders && folders.length > 0 && (
+          <HStack spacing={2}>
+            <Link
+              href={`/@${folders[0]!.folder.user.username}/folders/${
+                folders[0]!.folder.slug || folders[0]!.folder.id
+              }`}
+              display="flex"
+              alignItems="center"
+              gap={2}
+              color={folderColor}
+              transition="all 0.2s ease"
+              _hover={{
+                color: folderHoverColor,
+                textDecoration: "none",
+              }}
+            >
+              <IconFolder size={18} />
+              <Text>{folders[0]!.folder.title}</Text>
+            </Link>
           </HStack>
         )}
         <Heading size="2xl">{title}</Heading>
