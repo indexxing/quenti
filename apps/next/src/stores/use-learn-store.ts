@@ -229,8 +229,11 @@ export const createLearnStore = (initProps?: Partial<LearnStoreProps>) => {
           }
 
           const roundTimeline = state.roundTimeline;
-          if (state.roundProgress != state.termsThisRound - 1) {
-            // Remove the added question from the timeline
+          if (
+            state.roundProgress !== state.termsThisRound - 1 &&
+            roundTimeline[roundTimeline.length - 1] === active
+          ) {
+            // Remove the added question from the timeline if a repeat was scheduled
             roundTimeline.splice(-1);
           }
 
@@ -243,6 +246,9 @@ export const createLearnStore = (initProps?: Partial<LearnStoreProps>) => {
       },
       endQuestionCallback: () => {
         set((state) => {
+          if (state.roundCounter >= state.roundTimeline.length) {
+            return {};
+          }
           const masteredCount = state.studiableTerms.filter(
             (x) => x.correctness == 2,
           ).length;
