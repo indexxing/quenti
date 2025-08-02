@@ -170,7 +170,8 @@ export const createLearnStore = (initProps?: Partial<LearnStoreProps>) => {
       },
       answerIncorrectly: (termId) => {
         set((state) => {
-          const active = state.roundTimeline[state.roundCounter]!;
+          const active = state.roundTimeline[state.roundCounter];
+          if (!active) return {};
           const shouldRepeat = active.term.correctness === -2;
           return {
             answered: termId,
@@ -185,7 +186,8 @@ export const createLearnStore = (initProps?: Partial<LearnStoreProps>) => {
       },
       acknowledgeIncorrect: () => {
         set((state) => {
-          const active = state.roundTimeline[state.roundCounter]!;
+          const active = state.roundTimeline[state.roundCounter];
+          if (!active) return {};
           const shouldRepeat = active.term.correctness === -2;
           const original = active.term.correctness;
           let newCorrectness = active.type === "choice" ? -2 : -1;
@@ -256,7 +258,7 @@ export const createLearnStore = (initProps?: Partial<LearnStoreProps>) => {
             const hasMissedTerms = !!state.studiableTerms.find(
               (x) => x.incorrectCount > 0,
             );
-            return { completed: true, hasMissedTerms };
+            return { completed: true, hasMissedTerms, status: undefined };
           }
 
           if (state.roundCounter === state.roundTimeline.length - 1) {
