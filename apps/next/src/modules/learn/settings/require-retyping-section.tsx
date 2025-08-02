@@ -33,7 +33,7 @@ export const RequireRetypingSection = () => {
       <Stack spacing={0} w="full">
         <Text fontWeight={700}>Require re-typing correct answer</Text>
         <Text fontSize="sm" color={mutedColor}>
-          Require re-typing of correct answer after incorrect response
+          Require re-typing of correct answer after an incorrect response
         </Text>
       </Stack>
       <Switch
