@@ -130,8 +130,9 @@ export const HintButton: React.FC<HintButtonProps> = ({
         }`;
         break;
       case "length":
-        hintText = `The word has ${cleanAnswer.length} character${
-          cleanAnswer.length !== 1 ? "s" : ""
+        const nonSpaceLength = cleanAnswer.replace(/\s+/g, "").length;
+        hintText = `The word has ${nonSpaceLength} character${
+          nonSpaceLength !== 1 ? "s" : ""
         }`;
         break;
       default:
