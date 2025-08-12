@@ -3,6 +3,7 @@ import { createStore, useStore } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 
 import type {
+  FacingTerm,
   Question,
   RoundSummary,
   StudiableTermWithDistractors,
@@ -63,6 +64,7 @@ interface LearnState extends LearnStoreProps {
   setHintUsed: (termId: string, used: boolean) => void;
   startRetyping: (correctAnswer: string) => void;
   completeRetyping: () => void;
+  updateTerm: (term: FacingTerm) => void;
 }
 
 export type LearnStore = ReturnType<typeof createLearnStore>;
@@ -472,6 +474,22 @@ export const createLearnStore = (initProps?: Partial<LearnStoreProps>) => {
         set({
           isRetyping: false,
           correctAnswerToRetype: undefined,
+        });
+      },
+      updateTerm: (term) => {
+        set((state) => {
+          const apply = <T extends FacingTerm>(t: T): T =>
+            t.id === term.id ? { ...t, ...term } : t;
+
+          return {
+            studiableTerms: state.studiableTerms.map(apply),
+            allTerms: state.allTerms.map(apply),
+            roundTimeline: state.roundTimeline.map((q) => ({
+              ...q,
+              term: apply(q.term),
+              choices: q.choices.map(apply),
+            })),
+          };
         });
       },
     })),

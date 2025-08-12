@@ -30,6 +30,7 @@ export interface EditTermModalProps {
   isOpen: boolean;
   onClose: () => void;
   onDefinition: boolean;
+  onSuccess?: (term: FacingTerm) => void;
 }
 
 export const EditTermModal: React.FC<EditTermModalProps> = ({
@@ -37,6 +38,7 @@ export const EditTermModal: React.FC<EditTermModalProps> = ({
   isOpen,
   onClose,
   onDefinition,
+  onSuccess,
 }) => {
   const utils = api.useUtils();
   const { entityType } = useSetFolderUnison();
@@ -89,7 +91,8 @@ export const EditTermModal: React.FC<EditTermModalProps> = ({
   }, [isOpen]);
 
   const edit = api.terms.edit.useMutation({
-    async onSuccess() {
+    async onSuccess(updated) {
+      onSuccess?.(updated);
       onClose();
       if (entityType == "set") {
         await utils.studySets.invalidate();
