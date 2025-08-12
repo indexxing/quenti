@@ -170,6 +170,10 @@ export const ChoiceCard: React.FC<ChoiceCardProps> = ({ active }) => {
     active.choices,
   );
 
+  React.useEffect(() => {
+    setDisplayedChoices(active.choices);
+  }, [active.choices]);
+
   const handleEliminateChoices = (remainingChoices: FacingTerm[]) => {
     setDisplayedChoices(remainingChoices);
   };

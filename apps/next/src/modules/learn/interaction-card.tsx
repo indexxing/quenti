@@ -44,6 +44,7 @@ export const InteractionCard = () => {
   const roundProgress = useLearnContext((s) => s.roundProgress);
   const prevTermWasIncorrect = useLearnContext((s) => s.prevTermWasIncorrect);
   const status = useLearnContext((s) => s.status);
+  const updateTerm = useLearnContext((s) => s.updateTerm);
 
   const starredTerms = useContainerContext((s) => s.starredTerms);
   const starTerm = useContainerContext((s) => s.starTerm);
@@ -247,6 +248,7 @@ export const InteractionCard = () => {
         isOpen={editModalOpen}
         onClose={() => setEditModalOpen(false)}
         onDefinition={focusDefinition}
+        onSuccess={updateTerm}
       />
     </>
   );
