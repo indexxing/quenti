@@ -1,4 +1,4 @@
-import all from "email-providers/all.json" assert { type: "json" };
+import all from "email-providers/all.json" with { type: "json" };
 
 import { sendConfirmCodeEmail } from "@quenti/emails";
 import { disbandOrgUsersByDomain } from "@quenti/enterprise/users";
@@ -8,7 +8,7 @@ import { TRPCError } from "@trpc/server";
 
 import { genOtp } from "../../lib/otp";
 import { isOrganizationAdmin } from "../../lib/queries/organizations";
-import { RateLimitType, rateLimitOrThrow } from "../../lib/rate-limit";
+import { rateLimitOrThrow, RateLimitType } from "../../lib/rate-limit";
 import type { NonNullableUserContext } from "../../lib/types";
 import type { TAddStudentDomainSchema } from "./add-student-domain.schema";
 
@@ -21,10 +21,11 @@ export const addStudentDomainHandler = async ({
   ctx,
   input,
 }: AddStudentDomainOptions) => {
-  if (!(await isOrganizationAdmin(ctx.session.user.id, input.orgId)))
+  if (!(await isOrganizationAdmin(ctx.session.user.id, input.orgId))) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
     });
+  }
 
   const emailDomain = input.email.split("@")[1];
   if (emailDomain !== input.domain) {
@@ -70,10 +71,9 @@ export const addStudentDomainHandler = async ({
   if (existingVerified) {
     throw new TRPCError({
       code: "BAD_REQUEST",
-      message:
-        existingVerified.orgId !== input.orgId
-          ? "domain_already_verified"
-          : "already_verified_for_organization",
+      message: existingVerified.orgId !== input.orgId
+        ? "domain_already_verified"
+        : "already_verified_for_organization",
     });
   }
 
@@ -94,8 +94,9 @@ export const addStudentDomainHandler = async ({
       },
     });
 
-    if (org.published && existingStudentDomain.domain)
+    if (org.published && existingStudentDomain.domain) {
       await disbandOrgUsersByDomain(existingStudentDomain.domain);
+    }
   }
 
   const { hash, otp } = genOtp(input.email);
