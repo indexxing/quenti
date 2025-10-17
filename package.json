@@ -13,8 +13,8 @@
     "lint": "dotenv -- turbo lint",
     "lint:fix": "turbo lint:fix",
     "type-check": "turbo type-check",
-    "dev": "dotenv -- turbo dev --scope \"@quenti/next\"",
-    "start": "dotenv -- turbo start --scope \"@quenti/next\"",
+    "dev": "dotenv -- turbo dev --filter \"@quenti/next\"",
+    "start": "dotenv -- turbo start --filter \"@quenti/next\"",
     "next": "dotenv -- bun run --cwd apps/next",
     "website": "dotenv -- bun run --cwd apps/website",
     "prisma": "dotenv -- bun run --cwd packages/prisma",
@@ -33,7 +33,7 @@
     "eslint-config-turbo": "^1.11.1",
     "eslint-plugin-prettier": "^5.0.1",
     "eslint-plugin-unused-imports": "^3.0.0",
-    "turbo": "latest"
+    "turbo": "^2.5.8"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.0.2",

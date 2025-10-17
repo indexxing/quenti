@@ -1,0 +1,19 @@
+# Dependencies
+node_modules
+
+# Git
+.git
+
+# Env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Build outputs
+.next/
+.turbo/
+
+# OS generated files
+.DS_Store
