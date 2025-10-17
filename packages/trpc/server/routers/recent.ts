@@ -19,6 +19,7 @@ export const recentRouter = createTRPCRouter({
         entityType: "set",
         slug: null,
         numItems: set._count.terms,
+        inFolder: set.inFolder,
       });
     }
     for (const draft of drafts) {

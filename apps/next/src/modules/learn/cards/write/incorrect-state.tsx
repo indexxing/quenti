@@ -69,16 +69,18 @@ export const IncorrectState: React.FC<IncorrectStateProps> = ({
   React.useEffect(() => {
     setTimeout(() => {
       void (async () => {
-        controls.set({
-          height: `${stackRef.current!.offsetHeight}px`,
-        });
-        await controls.start({
-          height: `${fullStackRef.current!.offsetHeight}px`,
-          transition: {
-            duration: 0.5,
-            delay: 0.5,
-          },
-        });
+        if (stackRef.current && fullStackRef.current) {
+          controls.set({
+            height: `${stackRef.current.offsetHeight}px`,
+          });
+          await controls.start({
+            height: `${fullStackRef.current.offsetHeight}px`,
+            transition: {
+              duration: 0.5,
+              delay: 0.5,
+            },
+          });
+        }
       })();
     });
 

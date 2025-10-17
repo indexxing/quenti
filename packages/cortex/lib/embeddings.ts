@@ -22,7 +22,7 @@ const generateEmbeddingsBatch = async (
   if (!env.COHERE_API_KEY) return [];
 
   const response = await cohere.embed({
-    model: "embed-multilingual-v2.0",
+    model: "embed-v4.0",
     texts: terms,
   });
   if (response.statusCode && response.statusCode !== 200) {

@@ -59,8 +59,14 @@ export const SortFlashcardProgress: React.FC<SortFlashcardProgressProps> = ({
     (s) => [s.termsThisRound, s.index, s.studiableTerms],
   );
   const stateGoBack = useSortFlashcardsContext((s) => s.goBack);
-  const known = studiableTerms.filter((t) => t.correctness === 1).length;
-  const stillLearning = studiableTerms.length - known;
+  const known = studiableTerms.filter((t) => t.correctness === 2).length;
+  const almostMastered = studiableTerms.filter(
+    (t) => t.correctness === 1,
+  ).length;
+  const learning = studiableTerms.filter(
+    (t) => t.correctness === -1 || t.correctness === -2,
+  ).length;
+  const stillLearning = almostMastered + learning;
 
   const goBack = () => {
     stateGoBack(true);
@@ -99,7 +105,8 @@ export const SortFlashcardProgress: React.FC<SortFlashcardProgressProps> = ({
                 <Center w="full" h="full" p="4">
                   <CircularTermMastery
                     known={known}
-                    stillLearning={stillLearning}
+                    almostMastered={almostMastered}
+                    learning={learning}
                   />
                 </Center>
               </Card>

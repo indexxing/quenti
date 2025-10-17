@@ -20,4 +20,5 @@ export interface SetFolderEntity {
   };
   viewedAt?: Date;
   verified?: boolean;
+  inFolder?: boolean;
 }

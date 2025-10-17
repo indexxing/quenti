@@ -5,7 +5,7 @@ import { userMetadataSchema } from "@quenti/prisma/zod-schemas";
 
 import { stripe } from "./stripe";
 
-const selectedUser = Prisma.validator<Prisma.UserArgs>()({
+const selectedUser = Prisma.validator<Prisma.UserDefaultArgs>()({
   select: {
     id: true,
     email: true,

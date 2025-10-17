@@ -105,6 +105,11 @@ export const getRecentStudySets = async (
             },
           },
         },
+        folders: {
+          select: {
+            folderId: true,
+          },
+        },
       },
     })
   )
@@ -120,6 +125,7 @@ export const getRecentStudySets = async (
         total: set._count.collaborators,
         avatars: set.collaborators.map((c) => c.user.image || ""),
       },
+      inFolder: set.folders.length > 0,
     }));
 };
 

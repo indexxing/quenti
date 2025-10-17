@@ -56,7 +56,7 @@ export const RoundSummary = () => {
         </HStack>
         <Stack spacing="14px">
           {roundSummary?.termsThisRound.map((term) => (
-            <DisplayableTermPure term={term} key={term.id} />
+            <DisplayableTermPure key={term.id} term={term} />
           ))}
         </Stack>
       </Stack>

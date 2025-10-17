@@ -130,8 +130,13 @@ export const TermsOverview = () => {
 const TermsByStats = () => {
   const { terms, container, injected } = useAuthedSet();
 
-  let familiarTerms = injected.studiableLearnTerms
-    .filter((x) => x.correctness != 0 && x.correctness != 2)
+  let learningTerms = injected.studiableLearnTerms
+    .filter((x) => x.correctness === -1 || x.correctness === -2)
+    .map((x) => terms.find((t) => t.id === x.id)!)
+    .filter((x) => x);
+
+  let almostMasteredTerms = injected.studiableLearnTerms
+    .filter((x) => x.correctness === 1)
     .map((x) => terms.find((t) => t.id === x.id)!)
     .filter((x) => x);
 
@@ -147,19 +152,30 @@ const TermsByStats = () => {
     .map((x) => terms.find((t) => t.id === x.id)!)
     .filter((x) => x);
 
-  familiarTerms = container.learnMode == "Learn" ? familiarTerms : [];
+  learningTerms = container.learnMode == "Learn" ? learningTerms : [];
+  almostMasteredTerms =
+    container.learnMode == "Learn" ? almostMasteredTerms : [];
   unstudiedTerms = container.learnMode == "Learn" ? unstudiedTerms : [];
   masteredTerms = container.learnMode == "Learn" ? masteredTerms : terms;
 
   return (
     <>
-      {!!familiarTerms.length && (
+      {!!learningTerms.length && (
         <TermsCategory
-          heading="still studying"
+          heading="still learning"
           icon={IconProgressBolt}
-          subheading="You're still learning these terms. Keep it up!"
-          terms={familiarTerms}
+          subheading="You're still learning these terms. Keep practicing!"
+          terms={learningTerms}
           color="orange"
+        />
+      )}
+      {!!almostMasteredTerms.length && (
+        <TermsCategory
+          heading="almost mastered"
+          icon={IconProgressBolt}
+          subheading="You're getting close to mastering these terms!"
+          terms={almostMasteredTerms}
+          color="yellow"
         />
       )}
       {!!unstudiedTerms.length && (

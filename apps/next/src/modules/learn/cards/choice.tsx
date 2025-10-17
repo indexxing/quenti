@@ -26,6 +26,7 @@ import { SquareAssetPreview } from "../../../components/terms/square-asset-previ
 import { useAuthedSet } from "../../../hooks/use-set";
 import { useLearnContext } from "../../../stores/use-learn-store";
 import { word } from "../../../utils/terms";
+import { HintButton } from "../hint-button";
 
 interface ChoiceCardProps {
   active: Question;
@@ -34,6 +35,7 @@ interface ChoiceCardProps {
 export const ChoiceCard: React.FC<ChoiceCardProps> = ({ active }) => {
   const session = useSession();
   const { container } = useAuthedSet();
+  const questionTypes = container.learnQuestionTypes as ("choice" | "write")[];
   const answered = useLearnContext((s) => s.answered);
   const status = useLearnContext((s) => s.status);
   const answerCorrectly = useLearnContext((s) => s.answerCorrectly);
@@ -66,11 +68,22 @@ export const ChoiceCard: React.FC<ChoiceCardProps> = ({ active }) => {
     if (term.id === active.term.id) {
       answerCorrectly(term.id);
 
+      let newCorrectness: number;
+      if (
+        questionTypes.length === 1 &&
+        (active.term.correctness === 0 || active.term.correctness === -1)
+      ) {
+        newCorrectness = 2;
+      } else {
+        // Determine the correct progression: -2 → -1 → 1
+        newCorrectness = active.term.correctness === -2 ? -1 : 1;
+      }
+
       put.mutate({
         id: active.term.id,
         containerId: container.id,
         mode: "Learn",
-        correctness: 1,
+        correctness: newCorrectness,
         appearedInRound: active.term.appearedInRound || 0,
         incorrectCount: active.term.incorrectCount,
       });
@@ -88,7 +101,7 @@ export const ChoiceCard: React.FC<ChoiceCardProps> = ({ active }) => {
         id: active.term.id,
         containerId: container.id,
         mode: "Learn",
-        correctness: -1,
+        correctness: -2,
         appearedInRound: active.term.appearedInRound || 0,
         incorrectCount: active.term.incorrectCount + 1,
       });
@@ -153,24 +166,54 @@ export const ChoiceCard: React.FC<ChoiceCardProps> = ({ active }) => {
             active.answerMode == "Definition" ? "definition" : "term"
           }`;
 
+  const [displayedChoices, setDisplayedChoices] = React.useState(
+    active.choices,
+  );
+
+  React.useEffect(() => {
+    setDisplayedChoices(active.choices);
+  }, [active.choices]);
+
+  const handleEliminateChoices = (remainingChoices: FacingTerm[]) => {
+    setDisplayedChoices(remainingChoices);
+  };
+
   return (
     <Stack spacing="3">
-      <GenericLabel
-        evaluation={
-          status && status !== "unknownPartial"
-            ? status == "correct"
-            : undefined
-        }
+      <Flex
+        justifyContent="space-between"
+        alignItems="center"
+        wrap="wrap"
+        gap={2}
       >
-        {text}
-      </GenericLabel>
+        <GenericLabel
+          evaluation={
+            status && status !== "unknownPartial"
+              ? status == "correct"
+              : undefined
+          }
+        >
+          {text}
+        </GenericLabel>
+        {!answered && (
+          <Box flexShrink={0}>
+            <HintButton
+              type="choice"
+              correctTermId={active.term.id}
+              choices={active.choices}
+              onEliminateChoices={handleEliminateChoices}
+              disabled={!!answered}
+            />
+          </Box>
+        )}
+      </Flex>
       <Grid gridTemplateColumns={{ base: "1fr", md: "1fr 1fr" }} gap="6">
         <ChoiceShortcutLayer
           choose={(i) => {
-            if (active.choices.length > i) choose(active.choices[i]!);
+            if (displayedChoices.length > i) choose(displayedChoices[i]!);
           }}
         />
-        {active.choices.map((choice, i) => (
+        {displayedChoices.map((choice, i) => (
           <GridItem h="auto" key={i}>
             <Button
               w="full"

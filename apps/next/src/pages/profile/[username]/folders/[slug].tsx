@@ -52,18 +52,19 @@ FolderPage.PageWrapper = PageWrapper;
 FolderPage.getLayout = getLayout;
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
-  if (!db) return { props: { set: null } };
+  const dbInstance = db;
+  if (!dbInstance) return { props: { folder: null } };
 
   const username = (ctx.query?.username as string).substring(1);
   const idOrSlug = ctx.query?.slug as string;
 
-  const target = await db.query.user.findFirst({
+  const target = await dbInstance.query.user.findFirst({
     where: eq(user.username, username),
   });
 
   if (!target) return { props: { folder: null } };
 
-  const targetFolder = await db.query.folder.findFirst({
+  const targetFolder = await dbInstance.query.folder.findFirst({
     where: and(
       eq(folder.userId, target.id),
       or(eq(folder.id, idOrSlug), eq(folder.slug, idOrSlug)),
@@ -86,9 +87,9 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
   if (!targetFolder) return { props: { folder: null } };
 
   const { count } = (
-    await db
+    await dbInstance
       .select({
-        count: sql<number>`cast(count(${studySetsOnFolders.studySetId}) as unsigned)`,
+        count: sql<number>`count(${studySetsOnFolders.studySetId})::bigint`,
       })
       .from(studySetsOnFolders)
       .where(eq(studySetsOnFolders.folderId, targetFolder.id))

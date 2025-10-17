@@ -3,6 +3,7 @@ import { createStore, useStore } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 
 import type {
+  FacingTerm,
   Question,
   RoundSummary,
   StudiableTermWithDistractors,
@@ -29,18 +30,23 @@ export interface LearnStoreProps {
   roundTimeline: Question[];
   specialCharacters: string[];
   feedbackBank: { correct: string[]; incorrect: string[] };
+  questionTypes: ("choice" | "write")[];
   answered?: string;
   status?: "correct" | "incorrect" | "unknownPartial";
   roundSummary?: RoundSummary;
   completed: boolean;
   hasMissedTerms?: boolean;
   prevTermWasIncorrect?: boolean;
+  isRetyping?: boolean; // Track if user is retyping correct answer
+  correctAnswerToRetype?: string; // The correct answer that needs to be retyped
+  hintsUsed: Map<string, boolean>; // Track which terms had hints used
 }
 
 interface LearnState extends LearnStoreProps {
   initialize: (
     mode: LearnMode,
     answerMode: StudySetAnswerMode,
+    questionTypes: ("choice" | "write")[],
     studiableTerms: StudiableTermWithDistractors[],
     allTerms: TermWithDistractors[],
     round: number,
@@ -50,11 +56,15 @@ interface LearnState extends LearnStoreProps {
   acknowledgeIncorrect: () => void;
   answerUnknownPartial: () => void;
   overrideCorrect: () => void;
-  endQuestionCallback: (correct: boolean) => void;
+  endQuestionCallback: () => void;
   correctFromUnknown: (termId: string) => void;
   incorrectFromUnknown: (termId: string) => void;
   nextRound: (start?: boolean) => void;
   setFeedbackBank: (correct: string[], incorrect: string[]) => void;
+  setHintUsed: (termId: string, used: boolean) => void;
+  startRetyping: (correctAnswer: string) => void;
+  completeRetyping: () => void;
+  updateTerm: (term: FacingTerm) => void;
 }
 
 export type LearnStore = ReturnType<typeof createLearnStore>;
@@ -73,14 +83,25 @@ export const createLearnStore = (initProps?: Partial<LearnStoreProps>) => {
     roundTimeline: [],
     specialCharacters: [],
     feedbackBank: { correct: CORRECT, incorrect: INCORRECT },
+    questionTypes: ["choice", "write"],
     completed: false,
+    hintsUsed: new Map<string, boolean>(),
+    isRetyping: false,
+    correctAnswerToRetype: undefined,
   };
 
   return createStore<LearnState>()(
     subscribeWithSelector((set) => ({
       ...DEFAULT_PROPS,
       ...initProps,
-      initialize: (mode, answerMode, studiableTerms, allTerms, round) => {
+      initialize: (
+        mode,
+        answerMode,
+        questionTypes,
+        studiableTerms,
+        allTerms,
+        round,
+      ) => {
         const words =
           answerMode != "Both"
             ? studiableTerms.map((x) => word(answerMode, x, "answer"))
@@ -103,6 +124,7 @@ export const createLearnStore = (initProps?: Partial<LearnStoreProps>) => {
         set({
           mode,
           answerMode,
+          questionTypes,
           studiableTerms,
           allTerms,
           numTerms: studiableTerms.length,
@@ -125,34 +147,72 @@ export const createLearnStore = (initProps?: Partial<LearnStoreProps>) => {
         setTimeout(() => {
           set((state) => {
             const active = state.roundTimeline[state.roundCounter]!;
-            active.term.correctness = active.type == "choice" ? 1 : 2;
+            const original = active.term.correctness;
+            if (
+              state.questionTypes.length === 1 &&
+              (original === 0 || original === -1)
+            ) {
+              active.term.correctness = 2;
+            } else if (active.type === "choice") {
+              // For choice questions: -2 → -1 → 1
+              if (original === -2) {
+                active.term.correctness = -1;
+              } else {
+                active.term.correctness = 1;
+              }
+            } else {
+              // For write questions: -1 → 2 (write questions don't use -2)
+              active.term.correctness = 2;
+            }
 
-            state.endQuestionCallback(true);
+            state.endQuestionCallback();
             return {};
           });
         }, 1000);
       },
       answerIncorrectly: (termId) => {
-        set((state) => ({
-          answered: termId,
-          status: "incorrect",
-          roundTimeline:
-            state.roundProgress != state.termsThisRound - 1
-              ? [
-                  ...state.roundTimeline,
-                  state.roundTimeline[state.roundCounter]!,
-                ]
-              : state.roundTimeline,
-          prevTermWasIncorrect: true,
-        }));
+        set((state) => {
+          const active = state.roundTimeline[state.roundCounter];
+          if (!active) return {};
+          const shouldRepeat = active.term.correctness === -2;
+          return {
+            answered: termId,
+            status: "incorrect",
+            roundTimeline:
+              shouldRepeat && state.roundProgress != state.termsThisRound - 1
+                ? [...state.roundTimeline, active]
+                : state.roundTimeline,
+            prevTermWasIncorrect: true,
+          };
+        });
       },
       acknowledgeIncorrect: () => {
         set((state) => {
-          const active = state.roundTimeline[state.roundCounter]!;
-          active.term.correctness = -1;
+          const active = state.roundTimeline[state.roundCounter];
+          if (!active) return {};
+          const shouldRepeat = active.term.correctness === -2;
+          const original = active.term.correctness;
+          let newCorrectness = active.type === "choice" ? -2 : -1;
+          if (state.questionTypes.length === 1 && original === 0) {
+            newCorrectness = -1;
+          }
+          active.term.correctness = newCorrectness;
           active.term.incorrectCount++;
 
-          state.endQuestionCallback(false);
+          // Reset retyping state if active
+          if (state.isRetyping) {
+            set({
+              isRetyping: false,
+              correctAnswerToRetype: undefined,
+            });
+          }
+
+          if (active.term.correctness !== -1 && active.term.correctness !== 1) {
+            state.roundProgress++;
+          }
+          if (!shouldRepeat) state.prevTermWasIncorrect = false;
+
+          state.endQuestionCallback();
           return {};
         });
       },
@@ -164,21 +224,35 @@ export const createLearnStore = (initProps?: Partial<LearnStoreProps>) => {
           const active = state.roundTimeline[state.roundCounter]!;
           active.term.correctness = 2;
 
+          // Reset retyping state if active
+          if (state.isRetyping) {
+            set({
+              isRetyping: false,
+              correctAnswerToRetype: undefined,
+            });
+          }
+
           const roundTimeline = state.roundTimeline;
-          if (state.roundProgress != state.termsThisRound - 1) {
-            // Remove the added question from the timeline
+          if (
+            state.roundProgress !== state.termsThisRound - 1 &&
+            roundTimeline[roundTimeline.length - 1] === active
+          ) {
+            // Remove the added question from the timeline if a repeat was scheduled
             roundTimeline.splice(-1);
           }
 
-          state.endQuestionCallback(true);
+          state.endQuestionCallback();
           return {
             roundTimeline,
             prevTermWasIncorrect: false,
           };
         });
       },
-      endQuestionCallback: (correct) => {
+      endQuestionCallback: () => {
         set((state) => {
+          if (state.roundCounter >= state.roundTimeline.length) {
+            return {};
+          }
           const masteredCount = state.studiableTerms.filter(
             (x) => x.correctness == 2,
           ).length;
@@ -186,17 +260,17 @@ export const createLearnStore = (initProps?: Partial<LearnStoreProps>) => {
             const hasMissedTerms = !!state.studiableTerms.find(
               (x) => x.incorrectCount > 0,
             );
-            return { completed: true, hasMissedTerms };
+            return { completed: true, hasMissedTerms, status: undefined };
           }
 
-          if (state.roundProgress === state.termsThisRound - 1) {
+          if (state.roundCounter === state.roundTimeline.length - 1) {
             return {
               roundSummary: {
                 round: state.currentRound,
                 termsThisRound: Array.from(
                   new Set(state.roundTimeline.map((q) => q.term)),
                 ),
-                progress: state.studiableTerms.filter((x) => x.correctness != 0)
+                progress: state.studiableTerms.filter((x) => x.correctness == 2)
                   .length,
                 totalTerms: state.numTerms,
               },
@@ -205,7 +279,12 @@ export const createLearnStore = (initProps?: Partial<LearnStoreProps>) => {
           }
 
           const roundCounter = state.roundCounter + 1;
-          const roundProgress = state.roundProgress + (correct ? 1 : 0);
+          const active = state.roundTimeline[state.roundCounter]!;
+          const progressIncrement =
+            active.term.correctness !== -1 && active.term.correctness !== 1
+              ? 1
+              : 0;
+          const roundProgress = state.roundProgress + progressIncrement;
 
           return {
             roundCounter,
@@ -223,40 +302,64 @@ export const createLearnStore = (initProps?: Partial<LearnStoreProps>) => {
 
         set((state) => {
           const active = state.roundTimeline[state.roundCounter]!;
-          active.term.correctness = active.type == "choice" ? 1 : 2;
+          if (active.type === "choice") {
+            // For choice questions: -2 → -1 → 1
+            if (active.term.correctness === -2) {
+              active.term.correctness = -1;
+            } else {
+              active.term.correctness = 1;
+            }
+          } else {
+            // For write questions: -1 → 2 (write questions don't use -2)
+            active.term.correctness = 2;
+          }
 
-          state.endQuestionCallback(true);
+          state.endQuestionCallback();
           return {};
         });
       },
       incorrectFromUnknown: (termId) => {
-        set((state) => ({
-          answered: termId,
-          roundTimeline:
-            state.roundProgress != state.termsThisRound - 1
-              ? [
-                  ...state.roundTimeline,
-                  state.roundTimeline[state.roundCounter]!,
-                ]
-              : state.roundTimeline,
-          prevTermWasIncorrect: true,
-        }));
+        set((state) => {
+          const active = state.roundTimeline[state.roundCounter]!;
+          const shouldRepeat = active.term.correctness === -2;
+          return {
+            answered: termId,
+            roundTimeline:
+              shouldRepeat && state.roundProgress != state.termsThisRound - 1
+                ? [...state.roundTimeline, active]
+                : state.roundTimeline,
+            prevTermWasIncorrect: true,
+          };
+        });
 
         set((state) => {
           const active = state.roundTimeline[state.roundCounter]!;
-          active.term.correctness = -1;
+          const shouldRepeat = active.term.correctness === -2;
+          const original = active.term.correctness;
+          let newCorrectness = active.type === "choice" ? -2 : -1;
+          if (state.questionTypes.length === 1 && original === 0) {
+            newCorrectness = -1;
+          }
+          active.term.correctness = newCorrectness;
           active.term.incorrectCount++;
 
-          state.endQuestionCallback(false);
+          if (active.term.correctness !== -1 && active.term.correctness !== 1) {
+            state.roundProgress++;
+          }
+          if (!shouldRepeat) state.prevTermWasIncorrect = false;
+
+          state.endQuestionCallback();
           return {};
         });
       },
       nextRound: (start = false) => {
         set((state) => {
+          // Reset hints used for the new round
+          const hintsUsed = new Map<string, boolean>();
           const currentRound = state.currentRound + (!start ? 1 : 0);
 
           const incorrectTerms = state.studiableTerms.filter(
-            (x) => x.correctness == -1,
+            (x) => x.correctness == -1 || x.correctness == -2,
           );
           const unstudied = state.studiableTerms.filter(
             (x) => x.correctness == 0,
@@ -279,7 +382,7 @@ export const createLearnStore = (initProps?: Partial<LearnStoreProps>) => {
               ),
             )
             .concat(unstudied)
-            .concat(familiarTerms) // Add the rest of the familar terms if there's nothing else left
+            .concat(familiarTerms) // Add the rest of the familiar terms if there's nothing else left
             .slice(0, LEARN_TERMS_IN_ROUND);
 
           // For each term that hasn't been seen (correctness == 0), set the round it appeared in as the current round
@@ -288,7 +391,15 @@ export const createLearnStore = (initProps?: Partial<LearnStoreProps>) => {
           });
 
           const roundTimeline: Question[] = termsThisRound.map((term) => {
-            const choice = term.correctness < 1;
+            let choice: boolean;
+            if (
+              state.questionTypes.includes("choice") &&
+              state.questionTypes.includes("write")
+            ) {
+              choice = term.correctness < 1;
+            } else {
+              choice = state.questionTypes.includes("choice");
+            }
             const answerMode: StudySetAnswerMode =
               state.answerMode != "Both"
                 ? state.answerMode
@@ -337,12 +448,48 @@ export const createLearnStore = (initProps?: Partial<LearnStoreProps>) => {
             completed: !termsThisRound.length,
             hasMissedTerms,
             currentRound,
+            hintsUsed,
           };
         });
       },
       setFeedbackBank: (correct, incorrect) => {
         set({
           feedbackBank: { correct, incorrect },
+        });
+      },
+      setHintUsed: (termId, used) => {
+        set((state) => {
+          const newHintsUsed = new Map(state.hintsUsed);
+          newHintsUsed.set(termId, used);
+          return { hintsUsed: newHintsUsed };
+        });
+      },
+      startRetyping: (correctAnswer) => {
+        set({
+          isRetyping: true,
+          correctAnswerToRetype: correctAnswer,
+        });
+      },
+      completeRetyping: () => {
+        set({
+          isRetyping: false,
+          correctAnswerToRetype: undefined,
+        });
+      },
+      updateTerm: (term) => {
+        set((state) => {
+          const apply = <T extends FacingTerm>(t: T): T =>
+            t.id === term.id ? { ...t, ...term } : t;
+
+          return {
+            studiableTerms: state.studiableTerms.map(apply),
+            allTerms: state.allTerms.map(apply),
+            roundTimeline: state.roundTimeline.map((q) => ({
+              ...q,
+              term: apply(q.term),
+              choices: q.choices.map(apply),
+            })),
+          };
         });
       },
     })),

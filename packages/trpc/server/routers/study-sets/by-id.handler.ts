@@ -196,6 +196,7 @@ export const byIdHandler = async ({ ctx, input }: ByIdOptions) => {
     },
     container: {
       ...container,
+      learnQuestionTypes: JSON.parse(container.learnQuestionTypes),
       starredTerms: container.starredTerms.map((x: StarredTerm) => x.termId),
       studiableTerms: container.studiableTerms.map((x: StudiableTerm) => ({
         id: x.termId,
@@ -205,6 +206,7 @@ export const byIdHandler = async ({ ctx, input }: ByIdOptions) => {
         incorrectCount: x.incorrectCount,
         studiableRank: x.studiableRank,
       })),
+      requireRetyping: container.requireRetyping || false,
     },
   };
 };

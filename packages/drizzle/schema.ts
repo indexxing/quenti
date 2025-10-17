@@ -1,21 +1,31 @@
 import { relations } from "drizzle-orm";
 import {
   boolean,
-  datetime,
   index,
-  mysqlEnum,
-  mysqlTable,
+  pgEnum,
+  pgTable,
   primaryKey,
+  timestamp,
   unique,
   varchar,
-} from "drizzle-orm/mysql-core";
+} from "drizzle-orm/pg-core";
 
-export const entityShare = mysqlTable(
+export const entityTypeEnum = pgEnum("EntityType", ["StudySet", "Folder"]);
+
+export const studySetTypeEnum = pgEnum("StudySetType", ["Default", "Collab"]);
+export const visibilityEnum = pgEnum("Visibility", [
+  "Private",
+  "Unlisted",
+  "Public",
+  "Class",
+]);
+
+export const entityShare = pgTable(
   "EntityShare",
   {
     id: varchar("id", { length: 191 }).notNull(),
     entityId: varchar("entityId", { length: 191 }).notNull(),
-    type: mysqlEnum("type", ["StudySet", "Folder"]).notNull(),
+    type: entityTypeEnum("type").notNull(),
   },
   (table) => {
     return {
@@ -30,7 +40,7 @@ export const entityShare = mysqlTable(
   },
 );
 
-export const classJoinCode = mysqlTable(
+export const classJoinCode = pgTable(
   "ClassJoinCode",
   {
     id: varchar("id", { length: 191 }).notNull(),
@@ -62,7 +72,7 @@ export const classJoinCodeRelations = relations(classJoinCode, ({ one }) => ({
   }),
 }));
 
-export const class_ = mysqlTable(
+export const class_ = pgTable(
   "Class",
   {
     id: varchar("id", { length: 191 }).notNull(),
@@ -86,7 +96,7 @@ export const class_ = mysqlTable(
   },
 );
 
-export const studySetsOnClasses = mysqlTable(
+export const studySetsOnClasses = pgTable(
   "StudySetsOnClasses",
   {
     studySetId: varchar("studySetId", { length: 191 }).notNull(),
@@ -106,7 +116,7 @@ export const studySetsOnClasses = mysqlTable(
   },
 );
 
-export const foldersOnClasses = mysqlTable(
+export const foldersOnClasses = pgTable(
   "FoldersOnClasses",
   {
     folderId: varchar("folderId", { length: 191 }).notNull(),
@@ -124,7 +134,7 @@ export const foldersOnClasses = mysqlTable(
   },
 );
 
-export const folder = mysqlTable(
+export const folder = pgTable(
   "Folder",
   {
     id: varchar("id", { length: 191 }).notNull(),
@@ -155,22 +165,15 @@ export const folderRelations = relations(folder, ({ one }) => ({
   }),
 }));
 
-export const studySet = mysqlTable(
+export const studySet = pgTable(
   "StudySet",
   {
     id: varchar("id", { length: 191 }).notNull(),
     userId: varchar("userId", { length: 191 }).notNull(),
     title: varchar("title", { length: 255 }).notNull(),
-    type: mysqlEnum("type", ["Default", "Collab"]).notNull(),
+    type: studySetTypeEnum("type").notNull(),
     description: varchar("description", { length: 2000 }).notNull(),
-    visibility: mysqlEnum("visibility", [
-      "Private",
-      "Unlisted",
-      "Public",
-      "Class",
-    ])
-      .default("Public")
-      .notNull(),
+    visibility: visibilityEnum("visibility").default("Public").notNull(),
   },
   (table) => {
     return {
@@ -192,13 +195,13 @@ export const studySetRelations = relations(studySet, ({ one, many }) => ({
   collaborators: many(studySetCollaborator),
 }));
 
-export const studySetCollaborator = mysqlTable(
+export const studySetCollaborator = pgTable(
   "StudySetCollaborator",
   {
     id: varchar("id", { length: 191 }).notNull(),
     studySetId: varchar("studySetId", { length: 191 }).notNull(),
     userId: varchar("userId", { length: 191 }).notNull(),
-    createdAt: datetime("createdAt").notNull(),
+    createdAt: timestamp("createdAt").notNull(),
   },
   (table) => {
     return {
@@ -231,7 +234,7 @@ export const studySetCollaboratorRelations = relations(
   }),
 );
 
-export const studySetsOnFolders = mysqlTable(
+export const studySetsOnFolders = pgTable(
   "StudySetsOnFolders",
   {
     studySetId: varchar("studySetId", { length: 191 }).notNull(),
@@ -251,7 +254,7 @@ export const studySetsOnFolders = mysqlTable(
   },
 );
 
-export const term = mysqlTable(
+export const term = pgTable(
   "Term",
   {
     id: varchar("id", { length: 191 }).notNull(),
@@ -270,7 +273,7 @@ export const term = mysqlTable(
   },
 );
 
-export const user = mysqlTable(
+export const user = pgTable(
   "User",
   {
     id: varchar("id", { length: 191 }).notNull(),

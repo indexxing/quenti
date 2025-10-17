@@ -9,7 +9,7 @@ The open-source Quizlet alternative.
 - [NextAuth](https://next-auth.js.org)
 - [Prisma](https://prisma.io)
 - [Chakra UI](https://chakra-ui.com)
-- [MySQL](http://mysql.org/)
+- [PostgreSQL](https://www.postgresql.org/)
 - [Zustand](https://github.com/pmndrs/zustand)
 - [ClickHouse](https://clickhouse.tech/)
 
@@ -19,8 +19,8 @@ Get up and running by following these steps.
 
 ### Prerequisites
 
-- Node.js 18.x
-- MySQL
+- Node.js 22.x
+- PostgreSQL
 - Bun
 - Docker and docker-compose _(recommended)_
 
@@ -67,13 +67,14 @@ Get up and running by following these steps.
 
      ![ID and Secret Screenshot](https://files.readme.io/a136be9-GCPOAuthstep5.png)
 
-5. Start up a local MySQL database with
+5. Start up a local postgres instance with
 
    ```sh
-   docker-compose -f docker-compose.mysql.yml up
+   docker-compose -f docker-compose.postgres.yml up
    ```
 
 6. Push schema changes and generate the Prisma client
+
    ```sh
    bun prisma db:push
    ```

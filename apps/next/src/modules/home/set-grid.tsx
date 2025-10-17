@@ -27,29 +27,31 @@ export const SetGrid = () => {
               <GenericCard.Skeleton />
             </GridItem>
           ))}
-        {(data?.entities || []).map((item) => (
-          <GridItem key={item.id} h="156px">
-            {item.entityType == "set" ? (
-              <StudySetCard
-                studySet={{
-                  ...item,
-                  visibility: item.visibility!,
-                  type: item.type!,
-                }}
-                collaborators={item.collaborators}
-                draft={item.draft}
-                numTerms={item.numItems}
-                user={item.user}
-              />
-            ) : (
-              <FolderCard
-                folder={{ ...item }}
-                numSets={item.numItems}
-                user={item.user}
-              />
-            )}
-          </GridItem>
-        ))}
+        {(data?.entities || [])
+          .filter((item) => !(item.entityType === "set" && item.inFolder))
+          .map((item) => (
+            <GridItem key={item.id} h="156px">
+              {item.entityType == "set" ? (
+                <StudySetCard
+                  studySet={{
+                    ...item,
+                    visibility: item.visibility!,
+                    type: item.type!,
+                  }}
+                  collaborators={item.collaborators}
+                  draft={item.draft}
+                  numTerms={item.numItems}
+                  user={item.user}
+                />
+              ) : (
+                <FolderCard
+                  folder={{ ...item }}
+                  numSets={item.numItems}
+                  user={item.user}
+                />
+              )}
+            </GridItem>
+          ))}
       </Grid>
     </Stack>
   );

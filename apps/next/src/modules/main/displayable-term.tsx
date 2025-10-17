@@ -40,6 +40,7 @@ import {
 } from "../editor/card/image-components";
 import { RichTextBar } from "../editor/card/rich-text-bar";
 import { editorConfig } from "../editor/editor-config";
+import { TermMasteryTag } from "./term-mastery-tag";
 
 export interface DisplayableTermProps {
   term: FacingTerm;
@@ -53,13 +54,22 @@ export const DisplayableTerm: React.FC<DisplayableTermProps> = ({ term }) => {
   const unstarMutation = api.container.unstarTerm.useMutation();
   const removeImage = api.terms.removeImage.useMutation();
 
-  const { container } = useSet();
+  const { container, injected } = useSet();
   const starredTerms = useContainerContext((s) => s.starredTerms);
   const starTerm = useContainerContext((s) => s.starTerm);
   const unstarTerm = useContainerContext((s) => s.unstarTerm);
 
   const starred = starredTerms.includes(term.id);
   const Star = starred ? IconStarFilled : IconStar;
+
+  // Get the studiable term data to determine mastery status
+  const studiableTerm = injected?.studiableLearnTerms?.find(
+    (s) => s.id === term.id,
+  );
+  const correctness = studiableTerm?.correctness ?? 0;
+
+  // Check if we're in learn mode to display the mastery tag
+  const isLearnMode = container?.learnMode === "Learn";
 
   const [isEditing, setIsEditing] = React.useState(false);
   const [assetUrl, setAssetUrl] = React.useState(term.assetUrl);
@@ -194,14 +204,16 @@ export const DisplayableTerm: React.FC<DisplayableTermProps> = ({ term }) => {
               />
             </Stack>
           ) : (
-            <Text
-              w="full"
-              whiteSpace="pre-wrap"
-              overflowWrap="anywhere"
-              lineHeight={1.6}
-            >
-              <Display text={cache.word} richText={cache.wordRichText} />
-            </Text>
+            <HStack w="full" spacing={2} align="flex-start">
+              <Text
+                flexGrow={1}
+                whiteSpace="pre-wrap"
+                overflowWrap="anywhere"
+                lineHeight={1.6}
+              >
+                <Display text={cache.word} richText={cache.wordRichText} />
+              </Text>
+            </HStack>
           )}
           <Box
             bg="gray.100"
@@ -305,6 +317,11 @@ export const DisplayableTerm: React.FC<DisplayableTermProps> = ({ term }) => {
               justifyContent={{ base: "space-between", md: "end" }}
               w="full"
             >
+              {studiableTerm && isLearnMode && (
+                <Box ml={{ base: 0, md: 1 }}>
+                  <TermMasteryTag correctness={correctness} />
+                </Box>
+              )}
               <SetCreatorOnly fallback={<Box />}>
                 <IconButton
                   size={{ base: "sm", md: undefined }}

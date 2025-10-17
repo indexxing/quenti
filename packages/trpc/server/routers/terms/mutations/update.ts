@@ -25,9 +25,13 @@ export const bulkUpdateTerms = async (
 
   const formatted = vals.map((x) => Prisma.sql`(${Prisma.join(x)})`);
   const query = Prisma.sql`
-    INSERT INTO Term (id, word, definition, wordRichText, definitionRichText, \`rank\`, studySetId)
+    INSERT INTO "Term" (id, word, definition, "wordRichText", "definitionRichText", rank, "studySetId")
     VALUES ${Prisma.join(formatted)}
-    ON DUPLICATE KEY UPDATE word = VALUES(word), definition = VALUES(definition), wordRichText = VALUES(wordRichText), definitionRichText = VALUES(definitionRichText)
+    ON CONFLICT (id, "studySetId") DO UPDATE SET
+      word = EXCLUDED.word,
+      definition = EXCLUDED.definition,
+      "wordRichText" = EXCLUDED."wordRichText",
+      "definitionRichText" = EXCLUDED."definitionRichText"
   `;
 
   await prisma.$executeRaw(query);

@@ -173,6 +173,11 @@ const ContextLayer: React.FC<React.PropsWithChildren<ContextLayerProps>> = ({
     cardsStudyStarred: data.container.cardsStudyStarred,
     cardsAnswerWith: data.container.cardsAnswerWith,
     matchStudyStarred: data.container.matchStudyStarred,
+    requireRetyping: data.container.requireRetyping,
+    learnQuestionTypes: data.container.learnQuestionTypes as (
+      | "choice"
+      | "write"
+    )[],
   });
 
   const storeRef = React.useRef<ContainerStore>();

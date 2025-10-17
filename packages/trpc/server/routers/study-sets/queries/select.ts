@@ -24,6 +24,24 @@ export const studySetSelect = Prisma.validator<Prisma.StudySetSelect>()({
       verified: true,
     },
   },
+  folders: {
+    select: {
+      folderId: true,
+      folder: {
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          userId: true,
+          user: {
+            select: {
+              username: true,
+            },
+          },
+        },
+      },
+    },
+  },
 });
 
 export const termsSelect = Prisma.validator<Prisma.TermSelect>()({
